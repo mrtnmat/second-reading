@@ -86,8 +86,7 @@ damage = (((sum of the five r + 5) / 10) * k &gt;&gt; 12) * m / 10</code></pre>
 <h3 id="how-it-was-checked">How it was checked</h3>
 <p>The predictions were first tested in 2026-10-16 runs in DuckStation (nine cases, all exact), then re-run in Mednafen on 2026-10-20 and 2026-10-23. Each test puts the game in a real situation (a real monster on floor 1, armour equipped through the real menus), sets only the value under test in memory, and stops the emulator at the damage function with a <a class="term" href="../glossary.html#breakpoint">breakpoint</a> to read its inputs and outputs. Every case produced exactly the predicted number. Not yet measured: weapon reach and the rule that a zero-damage hit does nothing, both read from the code.</p>
 </section>
-<p class="sources">Research notes behind this article (in the project's repository): <code>decomp/psx_lab/kf1/docs/systems/combat.md</code>, <code>decomp/psx_lab/kf1/docs/design/player_and_feel.md</code>, <code>decomp/psx_lab/kf1/docs/design/world.md</code>.</p>
 </main>
-<footer>Built 2026-10-23 23:55 with drafts.</footer>
+<footer>Built 2026-10-24 00:25 with drafts.</footer>
 </body>
 </html>

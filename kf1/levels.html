@@ -59,8 +59,7 @@
 <h3 id="totals-and-healing-spells">Totals and healing spells</h3>
 <ul><li>Total attack = <code>(((slash + strike + thrust) · 3 &gt;&gt; 1) + (holy + fire) · 2) · 10 &gt;&gt; 3</code>; the Short Sword gives 7, as on screen. Total defence = <code>(slash + strike + thrust + poison/5 + dark + fire) · 10 / 7</code>, with slash already doubled <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</li><li>Menu-cast healing (<code>FUN_8002317c</code>): Healing HP += MAG; Dispoison clears poison, paralysis and the Resist Fire buff; Resist Fire sets its buff; Bless clears curse, dark and the buff and adds 3 × MAG HP. HP is capped at the maximum <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</li><li>Spell learning flags at <code>8009ce60 + 0x14 × spell</code>, set when MAG passes 36 (with Healing known), 69 and 74 <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</li></ul>
 </section>
-<p class="sources">Research notes behind this article (in the project's repository): <code>decomp/psx_lab/kf1/docs/systems/combat.md</code>, <code>decomp/psx_lab/kf1/docs/data/tables.md</code>.</p>
 </main>
-<footer>Built 2026-10-23 23:55 with drafts.</footer>
+<footer>Built 2026-10-24 00:25 with drafts.</footer>
 </body>
 </html>

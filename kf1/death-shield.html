@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Surviving a killing blow · Second Reading</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="site"><a class="name" href="../index.html">Second Reading</a>
+<a href="../glossary.html">Glossary</a><a href="../updates.html">Recently updated</a></header>
+<main>
+<h1>Surviving a killing blow</h1>
+<p class="meta"><a href="index.html">King&#x27;s Field, read from the code</a>, part 7 · revised 2026-10-24 · <span class="draft">draft</span></p>
+
+<section class="short">
+<h2 id="in-short">In short</h2>
+<p>In King&#x27;s Field, a blow that takes your HP to zero doesn&#x27;t kill you on the spot. First the view jolts for a moment, as it does for every hit, and only when that jolt is over does the game check whether you are dead. During the jolt you can still open the menu, and the game stands still while the menu is open. Use a healing item there, close the menu, and when the game finally checks, your HP isn&#x27;t zero any more. You live.</p>
+<p>Players know this trick. The Japanese speedrunner kerotto used it in their world-record <a class="term" href="../glossary.html#speedrun">speedrun</a> work, and that is how we heard of it. It isn&#x27;t a bug in the usual sense: no part of the program misbehaves. It simply falls out of the order in which the game does things, and the code lets us say exactly how big the window is, when it works and when it doesn&#x27;t.</p>
+
+</section>
+<section>
+<h2 id="how-it-works">How it works</h2>
+<h3 id="the-jolt-comes-first">The jolt comes first</h3>
+<p>Every hit that does damage makes the view shake and tilt for 8 <a class="term" href="../glossary.html#update">updates</a>, about 0.4 seconds. The hit itself only lowers your HP, never below zero, and starts that shake. The check &quot;is HP zero? then die&quot; sits at the very end of the shake <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Without the trick, that is what happens: 8 updates at 0 HP, then the death sequence <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<h3 id="the-menu-still-opens">The menu still opens</h3>
+<p>While the view is shaking, the game keeps reading the controller as usual. Pressing the menu button opens the menu, and while the menu is open nothing in the dungeon moves. Healing items and the healing spells cast from the menu change your HP immediately <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. When you close the menu, the shake carries on where it was; at its end the game looks at your HP, finds it above zero, and you carry on playing <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<p>We tested it in the running game: a deadly hit with a Dragon Grass Fruit in the bag. The menu opened with the status panel reading &quot;HP 0&quot;, the Fruit restored 300 HP, and the shake ended without a death <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<h3 id="how-long-you-have">How long you have</h3>
+<p>The menu can be opened on 7 of the shake&#x27;s 8 updates, a little over a third of a second; a press on the last one is too late, because the death has already begun <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. The menu takes a moment to load its pages before it reacts to buttons, but the game is frozen meanwhile, so that costs nothing.</p>
+<h3 id="when-it-doesn-t-work">When it doesn&#x27;t work</h3>
+<ul><li><strong>In the middle of your own swing.</strong> The menu won&#x27;t open while your weapon swing is still running. If the killing blow lands while you are attacking, you can&#x27;t reach the menu in time <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</li><li><strong>Deaths that don&#x27;t come from a hit.</strong> Poison, items that drain your HP, and falling into a pit kill you at once, with no shake and no window <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</li></ul>
+<h3 id="a-string-of-hits">A string of hits</h3>
+<p>Each new hit restarts the shake from the beginning <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. So if blows keep landing, the deadly check keeps being pushed back: you die 8 updates after the <em>last</em> hit, not the first. The more often you are being hit, the more time you have to reach the menu. We read this in the code but haven&#x27;t watched it with a monster yet <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+
+</section>
+<section class="details">
+<p class="shift">From here on it gets technical: formulas, memory addresses and how each claim was checked.</p>
+<h2 id="the-details">The details</h2>
+<h3 id="the-order-inside-one-update">The order inside one update</h3>
+<p><code>kf_PlayerUpdate</code> (<code>80018880</code>) runs once per update:</p>
+<ol><li>Return early into the death camera (state −1) or the fade-in after revival (−2); otherwise:</li><li>Read the pad. A new Cross (or Select) press with the swing timer <code>800a07f0</code> idle (<code>0xFFFF</code>) calls the menu (<code>kf_Menu_guess(0)</code> → <code>kf_MenuMain</code>), which loops on its own until it closes <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</li><li>Later: if the camera state <code>800a0822</code> is 1–7, write that step&#x27;s tilt and add one; at 8, clear the tilt and set 0, and call <code>kf_PlayerDie</code> <strong>only if HP is 0</strong> <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</li></ol>
+<p>The hit routine (<code>FUN_80016324</code>) subtracts the damage, floors HP at 0 and sets the camera state to 1 unless it is −1; it never calls <code>kf_PlayerDie</code> itself <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Healing writes HP directly: from Use item (Herb +25, Antidote Herb +10, Recovery Potion +80, Dragon Grass Leaf +150, Dragon Grass Fruit +300) or from Magic (Healing +MAG, Bless +3 × MAG), capped at the maximum <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Poison, drain and regeneration items go through <code>kf_AddHP_guess</code>, which calls <code>kf_PlayerDie</code> directly at HP 0; pits call it from <code>kf_UpdatePlayerHeight</code> <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<h3 id="the-run">The run</h3>
+<p>Mednafen, 2026-10-24: floor 1, the damaging floor tile at (90,28), maximum HP 900, HP 5, one Dragon Grass Fruit. The hit, the menu and the item are the game&#x27;s own; only the starting position, HP and bag were set up <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<div class="table"><table><thead><tr><th>Case</th><th>Result</th></tr></thead><tbody><tr><td>No input</td><td>camera state 1…8 at HP 0, then −1: death</td></tr><tr><td>Cross on update 1–7 after the hit</td><td>menu opens; Fruit used; HP 300; shake ends with no death</td></tr><tr><td>Cross on update 8 or later</td><td>the death camera is already running; the menu never opens</td></tr><tr><td>Attack on the update after the hit, then Cross every other update</td><td>swing timer runs 300 → 1800; menu never opens; death</td></tr></tbody></table></div>
+<p>The floor tile only hurts while the camera state is 0, so it can&#x27;t show the restart under a string of hits; that, menu-cast Healing and the Select button are untested.</p>
+</section>
+</main>
+<footer>Built 2026-10-24 00:25 with drafts.</footer>
+</body>
+</html>

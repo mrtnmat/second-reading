@@ -60,8 +60,7 @@ if class[nx/2000, row] != 0 and floor_y(nx/2000, row) - foot_y &gt; -700:  x = n
 <p><code>COM.DAT</code> chunk 1 (the same bytes as <code>KF/B0/RTBL</code>), loaded at <code>80065be8</code>: 16 blocks of 204 bytes, each <code>u16 width = 14, u16 rows = 14, u16 originX, u16 originY</code> then 14 × 14 bytes of 0, 1 or 2. <code>kf_DrawVisibleTiles</code> picks block <code>15 − (heading &gt;&gt; 8)</code>, places its origin on the camera&#x27;s tile, and draws every tile whose byte is non-zero. The value 2 (six cells just in front of the camera) is treated the same as 1 here. When the view is pitched far up or down, a 13 × 13 disc of radius about 6 tiles is used instead <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Fog: none up to 11,000 units, then fading linearly to black at about 16,500 <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
 <p>That the table&#x27;s orientation matches the player&#x27;s heading in the running game has not been re-checked separately; the rebuilt floors match the game&#x27;s own frames on all five floors <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
 </section>
-<p class="sources">Research notes behind this article (in the project's repository): <code>decomp/psx_lab/kf1/docs/design/world.md</code>, <code>decomp/psx_lab/kf1/docs/formats/level_data.md</code>, <code>decomp/psx_lab/kf1/docs/systems/player.md</code>, <code>decomp/psx_lab/kf1/docs/systems/rendering.md</code>.</p>
 </main>
-<footer>Built 2026-10-23 23:55 with drafts.</footer>
+<footer>Built 2026-10-24 00:25 with drafts.</footer>
 </body>
 </html>
