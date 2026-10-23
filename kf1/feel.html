@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why it feels heavy · Second Reading</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="site"><a class="name" href="../index.html">Second Reading</a>
+<a href="../glossary.html">Glossary</a><a href="../updates.html">Recently updated</a></header>
+<main>
+<h1>Why it feels heavy</h1>
+<p class="meta"><a href="index.html">King&#x27;s Field, read from the code</a>, part 2 · revised 2026-10-23 · <span class="draft">draft</span></p>
+
+<section class="short">
+<h2 id="in-short">In short</h2>
+<p>Everyone who plays King&#x27;s Field remembers how it feels: slow, heavy, a little like wading. That feel is made of a few plain numbers in the program:</p>
+<ul><li>The game thinks <strong>20 times a second</strong>, steadily.</li><li>Walking and turning have <strong>momentum</strong>: you speed up over a fifth of a second and drift a little when you let go.</li><li>Turning is <strong>slow</strong>: a full circle takes about 7.3 seconds.</li><li>Sidestepping <strong>stops sharply</strong>, while walking forward drifts.</li></ul>
+<p>None of this is an accident of old hardware. The numbers are deliberate and consistent, and some of them, like refusing to let you run faster diagonally, fix mistakes other games of the time made.</p>
+
+</section>
+<section>
+<h2 id="how-it-works">How it works</h2>
+<h3 id="a-steady-heartbeat">A steady heartbeat</h3>
+<p>The game waits for at least three screen refreshes between <a class="term" href="../glossary.html#update">updates</a>, so it runs at 20 updates a second <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. Every speed in the game is counted per update. A dungeon full of textured 3D tiles couldn&#x27;t reliably be drawn faster on a launch-year PlayStation, and a rate that is always 20 feels deliberate where one that wobbles between 20 and 30 feels like stutter <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</p>
+<h3 id="momentum">Momentum</h3>
+<p>Pressing forward doesn&#x27;t put you at full speed at once. Speed builds over 4 updates (0.2 seconds) to a top speed of 1.8 tiles a second <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. Let go and it falls away over about 8 updates, so you drift a step or so <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. This is much of the weight: a person in armour in the dark, not a camera on rails <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</p>
+<p>Sidestepping (<a class="term" href="../glossary.html#strafe">strafe</a>) builds up just as fast but stops <strong>twice as fast</strong> as walking forward <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. In a fight that is what you want: you sidestep a blow and stop exactly where you meant to <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</p>
+<h3 id="a-slow-turn">A slow turn</h3>
+<p>Turning also has momentum, and its top speed is low: about 49 degrees a second, so a full turn takes about 7.3 seconds. We predicted that from the program and then timed it in play <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. You can&#x27;t spin round when something hits you from behind; you have to face things, and approach rooms carefully. A fast turn at 20 updates a second would also look jerky <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</p>
+<p>Looking up and down is limited to about 17 degrees either way <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<h3 id="no-faster-diagonals">No faster diagonals</h3>
+<p>In some early 3D games, walking forward and sidestepping at once made you move about 41 % faster than either alone. King&#x27;s Field explicitly prevents it: when you do both, the game rescales the two speeds so that the total is never more than the faster of the two <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. It does this with an unusual but cheap formula that needs only one square root <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</p>
+<h3 id="your-gear-works-on-its-own-clock">Your gear works on its own clock</h3>
+<p>Your weapon and five pieces of equipment can each heal 1 HP, restore 1 MP or drain 1 HP every so many updates, each at its own interval <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. One number per item gives many items a personality (a ring that regenerates, a cursed piece that slowly bleeds you) without any special code <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>. One piece of armour, the Skull Armor, stops your magic from charging at all <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<h3 id="magic-charges-like-a-breath">Magic charges like a breath</h3>
+<p>The magic gauge works like the sword&#x27;s: it refills over time, at a rate set by your <a class="term" href="../glossary.html#mag">MAG</a> and the spell, and casting needs both a full gauge and enough MP <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. MP limits how much magic you use; the gauge limits how often. Together they give fights a rhythm: cast, back off, wait, cast <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</p>
+
+</section>
+<section class="details">
+<p class="shift">From here on it gets technical: formulas, memory addresses and how each claim was checked.</p>
+<h2 id="the-details">The details</h2>
+<h3 id="movement-numbers">Movement numbers</h3>
+<p>From <code>kf_PlayerUpdate</code> (<code>80018880</code>); all per update, at 20 updates per second <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>:</p>
+<div class="table"><table><thead><tr><th>Quantity</th><th>Normal</th><th>Paralysed</th></tr></thead><tbody><tr><td>Top forward/back speed</td><td>180 units</td><td>36</td></tr><tr><td>Top strafe speed</td><td>180</td><td>36</td></tr><tr><td>Acceleration (both)</td><td>45 (top ÷ 4)</td><td>9</td></tr><tr><td>Forward slow-down after release</td><td>22 (top ÷ 8)</td><td>4</td></tr><tr><td>Strafe slow-down after release</td><td>45 (top ÷ 4)</td><td>9</td></tr><tr><td>Top turn speed</td><td>28 (4,096 = full turn)</td><td>5</td></tr><tr><td>Turn acceleration and slow-down</td><td>7</td><td>1</td></tr><tr><td>Look up/down</td><td>±3 per update up to ±10, limit ±191 (about 16.8°)</td><td>same</td></tr></tbody></table></div>
+<p>Paralysis divides every limit by 5. Measured: holding forward on flat ground gives 0, 46, 91, 136, 181 then 181 units per update; paralysed, 0, 9, 18, 28, 36 then 36 <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<p><code>kf_WaitFrame</code> (<code>800149f4</code>) waits for at least 3 vertical blanks; on a 60 Hz Japanese console that is 20 updates a second. Slow frames are not compensated <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. The 7.3-second turn (28 × 20 = 560/4,096 of a turn per second) matches play <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<h3 id="combining-forward-and-strafe">Combining forward and strafe</h3>
+<p>With forward speed <em>f*, strafe speed *s</em> and <code>len = √(f² + s²)</code>, the applied components are <code>f² / len</code> and <code>s² / len</code> (keeping their signs). Both at 180 still move 180 units per update, not 254 <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Squaring also bends the direction toward the stronger axis. The two components are applied one after the other, forward first, each with its own collision test: the source of wall sliding (<a href="world.html">A 3D world on a 2D grid</a>).</p>
+<h3 id="head-bob">Head bob</h3>
+<p>Only while on the ground: <code>phase = (phase + 2 × speed) mod 4096</code>, <code>bob = sin(phase) × 64</code>. At full speed a cycle takes about 11 updates (0.57 s), and the eye height swings by ±64 units, measured as −11,437 … −11,564 <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<h3 id="view">View</h3>
+<p>77° horizontal field of view (screen distance 200 on a 320-pixel-wide screen), 4:3; lighting is baked into the scenery&#x27;s vertex colours <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<h3 id="equipment-over-time">Equipment over time</h3>
+<p>The weapon and five more slots (head, chest, shield, arms, feet) each carry three &quot;every <em>n* updates&quot; effects: +1 HP, +1 MP, −1 HP; *n</em> = 0 turns an effect off. They count against the frame counter at <code>800a07d8</code> <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Chest item <code>0x17</code> (Skull Armor) blocks the magic charge <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<h3 id="magic-gauge">Magic gauge</h3>
+<p>The gauge rises in every update except the one where the cast button is newly pressed (holding it still charges; a correction of 2026-10-20 to an earlier reading). Casting needs a full gauge (5,000) and MP ≥ the spell&#x27;s cost; it then spends the MP and resets the gauge to 0 <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. The Wind Blade Bracelet halves the cost of Wind Cutter <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+</section>
+<p class="sources">Research notes behind this article (in the project's repository): <code>decomp/psx_lab/kf1/docs/design/player_and_feel.md</code>, <code>decomp/psx_lab/kf1/docs/systems/player.md</code>.</p>
+</main>
+<footer>Built 2026-10-23 23:55 with drafts.</footer>
+</body>
+</html>

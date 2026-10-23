@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How we know what we know · Second Reading</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="site"><a class="name" href="../index.html">Second Reading</a>
+<a href="../glossary.html">Glossary</a><a href="../updates.html">Recently updated</a></header>
+<main>
+<h1>How we know what we know</h1>
+<p class="meta"><a href="index.html">Method</a>, part 1 · revised 2026-10-23 · <span class="draft">draft</span></p>
+
+<section class="short">
+<h2 id="in-short">In short</h2>
+<p>A game disc holds the game&#x27;s program as machine code: millions of tiny instructions for the console&#x27;s processor, unreadable to people. We turn that back into something readable, work out what each part does, and then test our understanding in the running game. Every claim on this site carries a label saying how far it got:</p>
+<ul><li><span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>: we predicted a number from the program, then saw exactly that number in the running game.</li><li><span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>: it follows from reading the program, but hasn&#x27;t been tested yet.</li><li><span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>: our interpretation, usually of <em>why</em> the designers did something. Reasoned, not proven.</li></ul>
+
+</section>
+<section>
+<h2 id="how-it-works">How it works</h2>
+<h3 id="reading-the-program">Reading the program</h3>
+<p>A tool called a <a class="term" href="../glossary.html#decompile">decompiler</a> (we use <a class="term" href="../glossary.html#ghidra">Ghidra</a>) turns machine code back into something close to the C language the game was originally written in. What comes out has no names: thousands of <a class="term" href="../glossary.html#function">functions</a> called things like <code>FUN_8002d078</code>, working on <a class="term" href="../glossary.html#memory-address">memory addresses</a> instead of named values. The work is to read them one by one and give them names: <em>this</em> one is the damage formula, <em>that</em> number in memory is the player&#x27;s strength.</p>
+<h3 id="predicting">Predicting</h3>
+<p>Once a piece of code is understood, it makes predictions. If the damage formula reads the way we think, then a Short Sword with 20 STR should do exactly 20 damage to a particular monster, and exactly 10 if the swing gauge is half full.</p>
+<h3 id="checking">Checking</h3>
+<p>We then run the original game in an <a class="term" href="../glossary.html#emulator">emulator</a> (<a class="term" href="../glossary.html#mednafen">Mednafen</a>) that our scripts can control. A check sets up a real situation in the game, such as walking up to a real monster or equipping armour through the real menus, and changes only the one value under test. The emulator stops at the right moment (a <a class="term" href="../glossary.html#breakpoint">breakpoint</a>) so the script can read what the game actually computed. If the game&#x27;s number equals the predicted number, the claim is marked <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<p>We don&#x27;t use other players&#x27; findings as proof. Where a fan guide or a wiki says something different, the article says so, and says which version the game&#x27;s own code supports.</p>
+
+</section>
+<section class="details">
+<p class="shift">From here on it gets technical: formulas, memory addresses and how each claim was checked.</p>
+<h2 id="the-details">The details</h2>
+<ul><li><strong>Corrections are public.</strong> When a finding turns out wrong, the article is revised, and its <em>revised</em> date and the <a href="../updates.html">Recently updated</a> page show it. The research notes keep the dated correction.</li><li><strong>The game itself is not here.</strong> Nothing on this site comes from the disc in bulk: no ripped files and no full data tables. What appears is the kind of thing a game guide prints: rules, formulas, item effects and short examples.</li><li><strong>Our tools.</strong> Decompilation with Ghidra; runtime checks with a modified Mednafen driven by Python scripts. Each article&#x27;s research notes are listed at its foot. The project&#x27;s repository is not public yet.</li></ul>
+</section>
+</main>
+<footer>Built 2026-10-23 23:55 with drafts.</footer>
+</body>
+</html>

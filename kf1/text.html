@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why the text is pictures · Second Reading</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="site"><a class="name" href="../index.html">Second Reading</a>
+<a href="../glossary.html">Glossary</a><a href="../updates.html">Recently updated</a></header>
+<main>
+<h1>Why the text is pictures</h1>
+<p class="meta"><a href="index.html">King&#x27;s Field, read from the code</a>, part 3 · revised 2026-10-23 · <span class="draft">draft</span></p>
+
+<section class="short">
+<h2 id="in-short">In short</h2>
+<p>When a character talks to you in King&#x27;s Field, or you read a sign, you are looking at a <strong>picture</strong> of text: a whole page drawn in advance and stored on the disc as an image. The program itself contains no Japanese sentences at all.</p>
+<p>Only the text that has to change, like item names and numbers, is put together from letters while you play, and the font for that holds just the kana plus about 115 <a class="term" href="../glossary.html#kanji">kanji</a>, exactly the ones the menus and item names need.</p>
+<p>The likely reason is memory. A font with all the kanji you need for ordinary Japanese would have filled a large part of the PlayStation&#x27;s video memory, while a CD has room to spare for pictures.</p>
+
+</section>
+<section>
+<h2 id="how-it-works">How it works</h2>
+<h3 id="pages-as-pictures">Pages as pictures</h3>
+<p>About 290 pages of text are stored as 256 × 256-pixel images: dialogue, character profiles, the bestiary, signs, magic descriptions, the parchment map screens and system messages <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Even short recurring messages, such as &quot;level up&quot; or &quot;it&#x27;s locked&quot;, are a single prepared sheet of lines <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Showing dialogue is &quot;load this picture from the disc and draw it&quot;, with no text layout at all.</p>
+<h3 id="why-not-a-font">Why not a font?</h3>
+<p>Writing Japanese freely takes thousands of kanji. A font of about 3,000 kanji at 16 × 16 pixels is 96 KB even at one bit per pixel, and more in the PlayStation&#x27;s own picture formats. The console has 1 MB of <a class="term" href="../glossary.html#video-memory">video memory</a>, which also has to hold the screen and every texture <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</p>
+<p>Pictures turn that around:</p>
+<ul><li>video memory holds only the page on screen, loaded from the disc when needed;</li><li>there is no text engine to write and debug on brand-new hardware;</li><li>the writers and artists could use any kanji, any layout and any size;</li><li>the cost is disc space, which a CD has plenty of: about 32 KB a page, under 10 MB for all of them on a 650 MB disc <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</li></ul>
+<p>It is also possible the team simply didn&#x27;t have a working text engine in time for a launch-window game, and took the most reliable path. The two reasons fit together <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</p>
+<h3 id="the-tiny-font">The tiny font</h3>
+<p>What must change while you play is built from letters: item names (which depend on what you pick up), numbers like HP and gold, and class titles. The font for that sits in the game&#x27;s shared texture file and holds katakana, hiragana, digits, a few Latin letters and about 115 kanji <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<p>Those kanji are exactly the ones used in menu labels and item names (装備 equipment, 魔法 magic, 薬草 herb, 鍵 key, 封印石 seal stone…); every one checked so far appears in some menu or item name <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Someone collected every kanji the menus needed and drew only those <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>. That is probably also why item names lean on katakana spellings of English words (ショートソード &quot;short sword&quot;, フルプレート &quot;full plate&quot;): a new kanji would have meant redrawing the font sheet <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</p>
+<h3 id="voiced-kana-for-free">Voiced kana for free</h3>
+<p>Japanese kana have voiced forms written with small marks (か ka → が ga). Instead of drawing every marked letter, the game stores the mark as a flag on the plain letter and draws the mark on top. That saves more than twenty letters&#x27; worth of space in the sheet <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+
+</section>
+<section class="details">
+<p class="shift">From here on it gets technical: formulas, memory addresses and how each claim was checked.</p>
+<h2 id="the-details">The details</h2>
+<ul><li><strong>Pages:</strong> 256 × 256 TIM images at 4 or 8 bits per pixel, one file per page with a structured ID (for example <code>T11011</code>) <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Which page a sign shows, and its top-128-row display, are decoded in the research notes on signs.</li><li><strong>No strings in the program:</strong> <code>GAME.EXE</code> holds no Japanese text, and no text-layout code has been found for the pages <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</li><li><strong>Glyph strings:</strong> menus, item names, spell names and numbers are arrays of 16-bit codes into the font sheet. Bits <code>+0x1000</code> and <code>+0x2000</code> add the dakuten (゛) and handakuten (゜) marks to the base kana <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Kanji occupy sheet rows 7–14 (codes 112–226).</li><li><strong>Menus:</strong> the game loads <code>STAT.DAT</code> whole; its texts are layout entries (x, y, glyph codes, ending in −1), 24 bytes each, in menus of 11 <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</li><li><strong>The font-from-the-word-list reading</strong> is rated medium-high in the research notes: not every glyph has been matched to a string yet.</li></ul>
+</section>
+<p class="sources">Research notes behind this article (in the project's repository): <code>decomp/psx_lab/kf1/docs/design/text.md</code>, <code>decomp/psx_lab/kf1/docs/formats/text.md</code>.</p>
+</main>
+<footer>Built 2026-10-23 23:55 with drafts.</footer>
+</body>
+</html>

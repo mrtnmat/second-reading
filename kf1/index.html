@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>King&#x27;s Field, read from the code · Second Reading</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="site"><a class="name" href="../index.html">Second Reading</a>
+<a href="../glossary.html">Glossary</a><a href="../updates.html">Recently updated</a></header>
+<main>
+<h1>King&#x27;s Field, read from the code</h1>
+<p class="meta"><span class="draft">draft</span></p>
+<p>King&#x27;s Field was one of the very first PlayStation games, released by FromSoftware in Japan in December 1994, a few weeks after the console itself. (The game sold in the West as <em>King&#x27;s Field</em> is the second one in the series.) It is a slow first-person dungeon crawler, and it is famously unforgiving about explaining itself.</p>
+<p>We have been taking its program apart. This series explains what we found: how the game really works underneath, especially the parts nobody could be sure about from playing alone. Each article starts in plain language and gets more technical as it goes; stop wherever you like.</p>
+<ol class="parts"><li><span class="n">1</span><a href="world.html">A 3D world on a 2D grid</a> · <span class="draft">draft</span><p>Every floor is a 100 × 100 grid of squares, like a board game seen from the inside. Walls, caves, stairs, and even how far you can see all follow from that grid.</p></li><li><span class="n">2</span><a href="feel.html">Why it feels heavy</a> · <span class="draft">draft</span><p>The famous slow, deliberate feel of King&#x27;s Field is a handful of numbers: 20 updates a second, momentum on every move, and a turn that takes over seven seconds.</p></li><li><span class="n">3</span><a href="text.html">Why the text is pictures</a> · <span class="draft">draft</span><p>Almost every line of text in King&#x27;s Field is a picture loaded from the disc, not letters drawn by the program. A tiny font of about 115 kanji covers the rest, and it was built from the game&#x27;s own word list.</p></li><li><span class="n">4</span><a href="combat.html">How combat really works</a> · <span class="draft">draft</span><p>One small formula decides every hit, yours and the monsters&#x27;. Strength works on both sides of it, armour is counted oddly, and poison resistance is a plain percentage.</p></li><li><span class="n">5</span><a href="levels.html">Levels, training and the level-48 ceiling</a> · <span class="draft">draft</span><p>The level table stops at 40, but the game keeps going by repeating its last step, until the experience counter fills up at level 48. Strength and magic also grow by practice, one point per hundred real hits.</p></li><li><span class="n">6</span><a href="hidden-walls.html">Walls you can walk through, and fences you can&#x27;t see</a> · <span class="draft">draft</span><p>Some walls are only pictures: the map marks them as open floor. And monsters stay in their rooms because of invisible fences that stop them but not you.</p></li></ol>
+</main>
+<footer>Built 2026-10-23 23:55 with drafts.</footer>
+</body>
+</html>

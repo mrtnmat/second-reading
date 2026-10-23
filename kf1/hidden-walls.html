@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Walls you can walk through, and fences you can&#x27;t see · Second Reading</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="site"><a class="name" href="../index.html">Second Reading</a>
+<a href="../glossary.html">Glossary</a><a href="../updates.html">Recently updated</a></header>
+<main>
+<h1>Walls you can walk through, and fences you can&#x27;t see</h1>
+<p class="meta"><a href="index.html">King&#x27;s Field, read from the code</a>, part 6 · revised 2026-10-23 · <span class="draft">draft</span></p>
+<p class="spoilers"><strong>Spoilers:</strong> this article names a secret room on the first floor and what is inside it.</p>
+
+<section class="short">
+<h2 id="in-short">In short</h2>
+<p>King&#x27;s Field hides rooms behind walls that aren&#x27;t really there. The map underneath marks them as ordinary floor; only the picture says &quot;wall&quot;. Walk straight at one and you pass through, with no button to press.</p>
+<p>There is a magic item, the Phantom Rod, that makes these walls flicker for a while and show what they really are.</p>
+<p>While investigating one of these secret rooms we found a second, separate trick: <strong>invisible fences</strong>. Hundreds of floor squares, at room entrances and corridor junctions, are marked &quot;no monsters&quot;. You walk across them without noticing; monsters can&#x27;t. That is why creatures stay in their own areas instead of following you through the dungeon.</p>
+
+</section>
+<section>
+<h2 id="how-it-works">How it works</h2>
+<h3 id="a-wall-that-is-only-a-picture">A wall that is only a picture</h3>
+<p>Every square of a floor stores separately what it looks like and how you collide with it (see <a href="world.html">A 3D world on a 2D grid</a>). Usually the two agree. A hidden wall is a square whose looks say &quot;wall&quot; and whose collision says &quot;open floor&quot; <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<p>The first one we checked is on floor 1, west of where you start: a passage that looks like the corridor&#x27;s wall, flanked by two real wall pieces. A script that only pushed forward on the controller walked the player straight through it into a small room <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. The room holds a chest with a Small Shield <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>, and a skeleton.</p>
+<p>Other squares on other floors use the same &quot;looks like wall, is floor&quot; piece. We can find them all in the map data, but not all of them have been walked through yet <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Not every secret in the game works this way, either: doors, moving walls and passages that open on conditions are separate mechanisms.</p>
+<h3 id="the-phantom-rod">The Phantom Rod</h3>
+<p>Using the Phantom Rod starts a timer of 1,000 <a class="term" href="../glossary.html#update">updates</a>, 50 seconds <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. While it runs, the game swaps the three hidden-wall pieces for different-looking ones when it draws the floor, but only on half of the updates, so the walls flicker between their disguise and their true look <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. The rod also tints the whole view while it lasts <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Collision is never touched: the rod only changes what you see.</p>
+<h3 id="the-skeleton-that-wouldn-t-follow">The skeleton that wouldn&#x27;t follow</h3>
+<p>A player on our team noticed that the skeleton in that secret room never comes out after you, even though you can walk in and out freely. Several explanations were possible: maybe monsters can&#x27;t cross hidden walls, maybe it was the skeleton&#x27;s size, or its way of finding a path. We wrote them all down and tested before picking one.</p>
+<p>The answer was none of those. The square just <em>inside</em> the hidden wall carries a flag that monsters can&#x27;t cross <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. With the player standing outside, the skeleton chased and swung at them, and stopped dead at that line every time <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. The hidden wall itself had nothing to do with it.</p>
+<h3 id="invisible-fences-everywhere">Invisible fences everywhere</h3>
+<p>Once we knew what to look for, the fences turned out to be everywhere: between 139 and 320 fenced squares on each floor, at corridor junctions and room entrances <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. The game&#x27;s collision check compares a square&#x27;s flags with the flags of whatever is moving. Monsters and other characters carry the &quot;fence&quot; flag, so they are stopped; the player doesn&#x27;t, so they pass <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<p>It is a cheap and invisible way to keep each creature in its area, the level designer&#x27;s equivalent of a sheepdog <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>. It probably also explains why stepping back through a doorway so often ends a chase <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</p>
+
+</section>
+<section class="details">
+<p class="shift">From here on it gets technical: formulas, memory addresses and how each claim was checked.</p>
+<h2 id="the-details">The details</h2>
+<h3 id="the-hidden-wall-on-floor-1">The hidden wall on floor 1</h3>
+<p>Floor 1, tile (4,16): tile type <code>0x45</code>, collision class 1 (open floor), direction 2, between solid tile types <code>0x44</code> and <code>0x46</code> <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Container 13 at (4,20) holds the Small Shield in the item data <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<p>Crossing check (2026-10-11, DuckStation, <code>probe_false_wall.py</code>): after a warp to the approach, forward input only; x stays 9,000 while z goes from 30,500 to 35,660, across the whole entrance tile (z 32,000–33,999), with no interaction button <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. That the passage <em>looks</em> like a wall is the human player&#x27;s observation, recorded with screenshots from the approach and from inside.</p>
+<h3 id="phantom-rod">Phantom Rod</h3>
+<p><code>kf_UseItem</code> (<code>80018054</code>), item <code>0x39</code>: timer <code>800a07d2</code> = 1,000, counted down once per update in <code>kf_PlayerUpdate</code>. The tile renderer (<code>8001e5ec</code>) substitutes types 44 → 17, 45 → 18 and 46 → 19 while the timer is active and its low two bits are 0 or 1: two updates on, two off <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. The view tint is drawn through <code>FUN_800187f0</code>. The darkness status is a different effect: a real hit from a floor-2 Phantom never reached the tint call over 544 frames <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<p><code>tools/map_features.py</code> lists every passable type-<code>0x45</code> square with its reveal replacement; only the floor-1 one is movement-verified.</p>
+<h3 id="creature-fences">Creature fences</h3>
+<p>Map layer 3, bit <code>0x80</code>, the only zone bit used on the disc: 145 / 209 / 139 / 231 / 320 tiles on floors 1–5. <code>kf_CheckCollision</code> (<code>8001a5ac</code>) step 5 returns a block when the tile&#x27;s high flag bits match the mover&#x27;s collision flags (<code>flags &gt;&gt; 8</code>). Monsters and other characters move with <code>0x8040</code> or <code>0x8060</code>; the player with <code>0x881</code> <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<p>Check (DuckStation, <code>probe_enemy_fence.py</code>): the secret-room skeleton at (4,18), whose entrance tile (4,17) is fenced, chased and swung with the player outside but never crossed z 36,000 <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. The question was first recorded on 2026-10-11 with four candidate causes and resolved on 2026-10-12.</p>
+<p><code>kf_CheckCollision</code> returns a block for any matching zone bit, so a fenced square stops a monster wherever it is placed. A handful of monsters are placed on squares that refuse every step of their own (diagonal half-tiles or fenced tiles), so they would turn on the spot <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. That has not yet been watched in the game.</p>
+</section>
+<p class="sources">Research notes behind this article (in the project's repository): <code>decomp/psx_lab/kf1/docs/systems/illusion_passages.md</code>, <code>decomp/psx_lab/kf1/docs/systems/enemies.md</code>, <code>decomp/psx_lab/kf1/docs/formats/level_data.md</code>, <code>decomp/psx_lab/kf1/docs/systems/combat.md</code>.</p>
+</main>
+<footer>Built 2026-10-23 23:55 with drafts.</footer>
+</body>
+</html>

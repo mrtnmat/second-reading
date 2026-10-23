@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A 3D world on a 2D grid · Second Reading</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="site"><a class="name" href="../index.html">Second Reading</a>
+<a href="../glossary.html">Glossary</a><a href="../updates.html">Recently updated</a></header>
+<main>
+<h1>A 3D world on a 2D grid</h1>
+<p class="meta"><a href="index.html">King&#x27;s Field, read from the code</a>, part 1 · revised 2026-10-23 · <span class="draft">draft</span></p>
+
+<section class="short">
+<h2 id="in-short">In short</h2>
+<p>King&#x27;s Field looks like a free 3D world, but underneath every floor of the dungeon is a flat grid of 100 by 100 squares, a bit like a board game seen from the inside. Each square says what is drawn there, how high its floor is, and whether you can walk on it. Being &quot;in a wall&quot; is just standing on a square marked solid.</p>
+<p>The grid explains a lot of how the game behaves: why you slide along walls, why winding caves are made of diagonal half-squares, and why the end of a long corridor is a black box rather than a distant wall. The game draws only the squares listed in a small precomputed table for the direction you are facing.</p>
+
+</section>
+<section>
+<h2 id="how-it-works">How it works</h2>
+<h3 id="squares-five-facts-each">Squares, five facts each</h3>
+<p>Each floor is a grid of 100 × 100 <a class="term" href="../glossary.html#tile">tiles</a>. Every tile stores five one-byte facts <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>:</p>
+<ul><li><strong>what it looks like</strong>: which piece of scenery is drawn there;</li><li><strong>how high its floor is</strong>;</li><li><strong>which way it faces</strong> (it matters for stairs);</li><li><strong>flags</strong>, such as &quot;a creature can&#x27;t enter here&quot; or &quot;something is standing here&quot;;</li><li><strong>how you collide with it</strong>: solid, open floor, half-floor (for diagonal walls) or stair.</li></ul>
+<p>That is 50 KB per floor, always the same size, which is easy to fit into the PlayStation&#x27;s 2 MB of memory <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. It is also how many classic dungeon games were built, <em>Wizardry</em> among them: design and compute the world in 2D, and draw it in 3D <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</p>
+<h3 id="walking-is-a-table-lookup">Walking is a table lookup</h3>
+<p>One tile is 2,000 of the game&#x27;s distance units across. Your position is two numbers, and dividing them by 2,000 gives the tile you stand on. &quot;Can I step there?&quot; becomes &quot;is that tile marked solid?&quot;, a single lookup instead of testing against thousands of polygons. On a processor without fast fractional maths, that mattered <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</p>
+<p>For walls, you are a single point, with no body width <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. A move is tried in two parts, first along one axis and then along the other, and each part is accepted or refused on its own. When you walk at a wall at an angle, the part going into the wall is refused and the part going along it is accepted, so you slide along the wall without the game ever working out which way the wall faces <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<p>Heights work the same way. You can step up onto anything less than 700 units above your feet, and drop down any distance; anything 700 or higher is a wall <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<h3 id="caves-from-half-squares">Caves from half-squares</h3>
+<p>A grid of squares can only make right-angled corridors, which looks built. The natural caves on every floor wind diagonally. They use four extra kinds of tile, each half floor and half wall, cut along one diagonal. When you walk onto one, the game pushes you back onto its open half; when you walk straight into its wall side, you slide along the diagonal <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. Rooms built by people use whole squares and natural caves use diagonals: a clear visual language from one small addition to the grid <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</p>
+<h3 id="stairs">Stairs</h3>
+<p>Stair tiles are drawn as two half-steps of 300 units each. The player, though, ignores that and climbs a whole stair tile as one 600-unit step, smoothed over a few updates so it feels like walking up <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Monsters do use the half-steps <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Stairs exist on floors 2, 3 and 4; floors 1 and 5 have none <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<h3 id="how-far-you-can-see">How far you can see</h3>
+<p>Working out which parts of a dungeon are visible is expensive, so King&#x27;s Field doesn&#x27;t. The disc holds a small table with sixteen precomputed fans, one for each sixteenth of a full turn. Each fan is a 14 × 14 patch of tiles around you, with about 60 % of them marked &quot;draw&quot; <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Every frame the game picks the fan for the direction you are facing and draws only those tiles.</p>
+<p>That is why the far end of a long corridor is a black box: the corridor goes on, but it runs off the edge of the fan. Fog fades everything to black from about 5½ tiles away, which hides most of the cut <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+
+</section>
+<section class="details">
+<p class="shift">From here on it gets technical: formulas, memory addresses and how each claim was checked.</p>
+<h2 id="the-details">The details</h2>
+<h3 id="the-five-layers">The five layers</h3>
+<div class="table"><table><thead><tr><th>Layer</th><th>Runtime address</th><th>Meaning</th></tr></thead><tbody><tr><td>0</td><td><code>8009a748</code></td><td>Tile type (scenery model); <code>0xFF</code> = no tile. Also indexes a per-type ceiling table at <code>800558b8</code></td></tr><tr><td>1</td><td><code>80095900</code></td><td>Floor height: <code>value × −100</code> (Y points down)</td></tr><tr><td>2</td><td><code>80069018</code></td><td>Direction 1–4: which half of a stair tile is lowered; probably also the model&#x27;s rotation <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span></td></tr><tr><td>3</td><td><code>800668e8</code></td><td>Flags: low 5 bits = something stands here; <code>0x80</code> = creature fence (the only zone bit used on the disc)</td></tr><tr><td>4</td><td><code>80098018</code></td><td>Collision class: 0 solid, 1 floor, 2–5 diagonal half-tiles, 6 stair</td></tr></tbody></table></div>
+<p>Tile = 2,000 units: <code>col = x / 2000</code>, <code>row = z / 2000</code>. Heights on disc move in steps of 3 (300 units). The ceiling table is one 16-bit value per tile type, so a &quot;low corridor&quot; tile always has a low ceiling wherever it is placed and the art and the collision agree automatically <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>.</p>
+<h3 id="collision-cheap-to-expensive">Collision, cheap to expensive</h3>
+<p><code>kf_CheckCollision</code> (<code>8001a5ac</code>) tests, in order <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>:</p>
+<ol><li>collision class not 1 or 6: blocked, returning the class (so the caller can resolve diagonals);</li><li>floor too high to step onto;</li><li>no tile (<code>0xFF</code>);</li><li>ceiling (type table + floor height) too low for the mover;</li><li>zone flags matching the mover&#x27;s flags (creature fences);</li><li>only if the tile&#x27;s &quot;occupied&quot; bits are set: placed objects, creatures and items.</li></ol>
+<p>Most moves are settled by step 1, a one-byte read; the expensive tests only run on tiles flagged as occupied, a broad phase in modern terms <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>. Each later test can be switched off by the caller, so the same function serves the player, monsters and projectiles.</p>
+<h3 id="the-player-s-move">The player&#x27;s move</h3>
+<p><code>kf_MoveAlong</code> (<code>800171fc</code>), forward/back first, then sideways:</p>
+<pre><code>nx = x - sin(angle)*d ;  nz = z + cos(angle)*d
+if class[col, nz/2000] != 0 and floor_y(col, nz/2000) - foot_y &gt; -700:  z = nz
+if class[nx/2000, row] != 0 and floor_y(nx/2000, row) - foot_y &gt; -700:  x = nx</code></pre>
+<p>Positions are not pushed back from walls: walking east from the start stops at x = 33,988, with the wall tile starting at 34,000 <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<p>Diagonal tiles: with <code>lx = x mod 2000</code> and <code>lz = z mod 2000</code>, class 2 keeps the south-east half (<code>lx ≥ lz</code>), 3 the south-west (<code>lx + lz ≤ 2000</code>), 4 the north-west (<code>lz ≥ lx</code>), 5 the north-east (<code>lx + lz ≥ 2000</code>). A player outside the open half is pushed toward the diagonal by half the overlap, then slides along it at <code>d × 0.707</code> if the tile ahead is solid. Checked by walking north into the class-3 tile (22,5) on floor 1: the player slid north-west into (21,6) and carried on <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<p>Stepping up eases in: speed −100 per update, slowing by 5 each update, so a 300 step takes 3 updates. Falling accelerates by 40 per update <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. <code>kf_UpdatePlayerHeight</code> uses the tile&#x27;s base height only, so the stair half-step (<code>kf_GetFloorHeight</code>, used by collision and by monsters) never moves the player&#x27;s feet <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. The earlier reading that the player climbs stairs in two half-steps was corrected in the research notes on 2026-10-17.</p>
+<h3 id="the-visibility-table">The visibility table</h3>
+<p><code>COM.DAT</code> chunk 1 (the same bytes as <code>KF/B0/RTBL</code>), loaded at <code>80065be8</code>: 16 blocks of 204 bytes, each <code>u16 width = 14, u16 rows = 14, u16 originX, u16 originY</code> then 14 × 14 bytes of 0, 1 or 2. <code>kf_DrawVisibleTiles</code> picks block <code>15 − (heading &gt;&gt; 8)</code>, places its origin on the camera&#x27;s tile, and draws every tile whose byte is non-zero. The value 2 (six cells just in front of the camera) is treated the same as 1 here. When the view is pitched far up or down, a 13 × 13 disc of radius about 6 tiles is used instead <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Fog: none up to 11,000 units, then fading linearly to black at about 16,500 <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<p>That the table&#x27;s orientation matches the player&#x27;s heading in the running game has not been re-checked separately; the rebuilt floors match the game&#x27;s own frames on all five floors <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+</section>
+<p class="sources">Research notes behind this article (in the project's repository): <code>decomp/psx_lab/kf1/docs/design/world.md</code>, <code>decomp/psx_lab/kf1/docs/formats/level_data.md</code>, <code>decomp/psx_lab/kf1/docs/systems/player.md</code>, <code>decomp/psx_lab/kf1/docs/systems/rendering.md</code>.</p>
+</main>
+<footer>Built 2026-10-23 23:55 with drafts.</footer>
+</body>
+</html>

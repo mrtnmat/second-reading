@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Levels, training and the level-48 ceiling · Second Reading</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="site"><a class="name" href="../index.html">Second Reading</a>
+<a href="../glossary.html">Glossary</a><a href="../updates.html">Recently updated</a></header>
+<main>
+<h1>Levels, training and the level-48 ceiling</h1>
+<p class="meta"><a href="index.html">King&#x27;s Field, read from the code</a>, part 5 · revised 2026-10-23 · <span class="draft">draft</span></p>
+
+<section class="short">
+<h2 id="in-short">In short</h2>
+<p>King&#x27;s Field has two ways of growing stronger, and the code settles exactly how both work:</p>
+<ul><li><strong>Levels</strong> come from experience points (<a class="term" href="../glossary.html#exp">EXP</a>). The game carries a table for levels 1 to 40, but it doesn&#x27;t stop there: past 40 it keeps adding the table&#x27;s last step again and again. The real limit is the experience counter, which can&#x27;t go above 99,999. That makes <strong>level 48</strong> the highest you can reach.</li><li><strong>Training</strong> raises <a class="term" href="../glossary.html#str">STR</a> and <a class="term" href="../glossary.html#mag">MAG</a> by practice: every 100 hits that actually do damage add one point. Misses don&#x27;t count, and neither do hits that do nothing, but the killing blow does.</li></ul>
+<p>Your class title on the status screen (SOLDIER, MAGE, SWORDMASTER…) is worked out from your base STR and MAG each time the screen is drawn. And the &quot;total attack&quot; and &quot;total defence&quot; numbers on that screen are for show: combat never uses them.</p>
+
+</section>
+<section>
+<h2 id="how-it-works">How it works</h2>
+<h3 id="levelling-up">Levelling up</h3>
+<p>Each monster gives a fixed amount of EXP when it dies: the floor-1 Man Trap 7, a Mummy 15, a Reaper 20 <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. Your EXP is a running total. When it passes the next threshold, the game copies that level&#x27;s row from its table: new maximum HP and MP, plus a gain to STR and MAG <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. Two thresholds passed at once give two levels at once <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. A level&#x27;s gain can be zero: going from level 3 to 4 adds 2 STR and no MAG <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<p>Levelling up does <strong>not</strong> refill your HP <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<h3 id="past-level-40">Past level 40</h3>
+<p>The table has 40 rows. From level 40 on, each new level adds the difference between the last two rows: +28 max HP, +18 max MP, +4 STR, +4 MAG, and the next threshold 3,500 EXP further on <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. With EXP capped at 99,999, the last threshold you can pass is the one for level 48 <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Earlier notes, including our own, said the game stops at 40; that was wrong, and was corrected when the level-41 step was measured.</p>
+<h3 id="training-by-practice">Training by practice</h3>
+<p>Every hit that does damage to a living creature adds one to a hidden counter <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>:</p>
+<ul><li>a hit with slash, strike or thrust damage (a weapon) counts toward <strong>STR</strong>;</li><li>a hit with none of those (a holy or fire spell) counts toward <strong>MAG</strong>.</li></ul>
+<p>Every 100 counts gives one point of the base stat, and your stats are recalculated at once <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. A missed swing, a hit that does zero damage and a missed spell add nothing <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. Healing and other support spells cast from the menu train nothing either <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. The killing blow counts, because the creature still had HP when it was hit <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<p>The Verdite, an item that raises MAG by one, works by adding 100 to the MAG counter. That gives the point, but the counter then resets to zero, so any MAG training you had built up is lost <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<h3 id="class-titles">Class titles</h3>
+<p>The title on the status screen is picked from a 3 × 3 grid by your <strong>base</strong> STR and MAG, each in three bands (under 40, 40–59, 60 and up) <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>:</p>
+<div class="table"><table><thead><tr><th></th><th>MAG under 40</th><th>MAG 40–59</th><th>MAG 60+</th></tr></thead><tbody><tr><td><strong>STR under 40</strong></td><td>SOLDIER</td><td>MAGE</td><td>WIZARD</td></tr><tr><td><strong>STR 40–59</strong></td><td>HIGHSOLDIER</td><td>MAGEFIGHTER</td><td>WIZARD</td></tr><tr><td><strong>STR 60+</strong></td><td>SWORDMAN</td><td>SWORDMAN</td><td>SWORDMASTER</td></tr></tbody></table></div>
+<p>Two of the nine cells repeat a title, so there are seven different titles. The cells STR 40–59 with MAG 60+, and STR 60+ with MAG 40–59, follow from the code; the other seven were checked on screen <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. The title is never stored; it is computed while the screen is drawn. Because it uses base stats, equipment like the Blood Mask (−8 STR) doesn&#x27;t change your title <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<h3 id="learning-spells-by-mag">Learning spells by MAG</h3>
+<p>Some spells come from magic power itself: above 36 MAG (if you know Healing) you learn Dispoison, above 69 Fire Wall, above 74 Lightning Bolt <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<h3 id="the-status-screen-s-totals">The status screen&#x27;s totals</h3>
+<p>The status screen shows a &quot;total attack&quot; (総合攻撃力) and a &quot;total defence&quot; (総合防御力). They are weighted sums of your attack and defence values, made for display only; nothing in combat reads them <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. The way damage is really worked out is in <a href="combat.html">How combat really works</a>.</p>
+
+</section>
+<section class="details">
+<p class="shift">From here on it gets technical: formulas, memory addresses and how each claim was checked.</p>
+<h2 id="the-details">The details</h2>
+<h3 id="level-up">Level-up</h3>
+<p><code>FUN_80016058</code>, called with each kill&#x27;s EXP: while EXP (<code>800a0780</code>, u32, capped at 99,999) ≥ the threshold (<code>800a0784</code>), copy the new level&#x27;s row from the table at <code>800650b0</code> (12-byte rows: max HP, max MP, STR gain, MAG gain, EXP threshold) into max HP/MP, add the gains to base STR (<code>800a07a2</code>) and MAG (<code>800a07a4</code>), and increment the level (<code>800a0788</code>). From index 40 on, it adds row 39 − row 38 and row 39&#x27;s gains instead. Max HP/MP cap at 9,999; base STR/MAG at 999 <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<p>Measured in Mednafen on 2026-10-23 with the new-game character and real kills <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>:</p>
+<div class="table"><table><thead><tr><th>Case</th><th>Result</th></tr></thead><tbody><tr><td>EXP 45 + Man Trap (7)</td><td>level 2: max HP 33, MP 22, STR/MAG 21/21, next 110</td></tr><tr><td>EXP 105 + 7</td><td>two levels: level 3, max HP 37, MP 23, +2/+2, next 187</td></tr><tr><td>From level 3 at EXP 183</td><td>level 4: 42/27, STR +2, MAG +0, next 285</td></tr><tr><td>Level 40, EXP 72,900, next 72,904</td><td>level 41: +28 HP, +18 MP, +4/+4, next 76,404</td></tr></tbody></table></div>
+<p>After level 41 the thresholds run 79,904, 83,404, 86,904, 90,404, 93,904 and 97,404 (level 48); the next would be 100,904, above the cap.</p>
+<p>EXP per kill is the monster type record&#x27;s 16-bit value at <code>+0x84</code> (records at <code>8006bd98 + 0x98 × type</code>) <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<h3 id="training">Training</h3>
+<p><code>kf_DamageEnemy</code> calls <code>FUN_80015f28</code> (STR) or <code>FUN_80015fc0</code> (MAG) for every damaging player hit (source byte <code>&amp; 0xF0 == 0x10</code>) on a creature with HP &gt; 0. Counters at <code>800a079e</code> (STR) and <code>800a07a0</code> (MAG); at 100: +1 base stat, counter to 0, stats recalculated. These functions have exactly two callers, <code>kf_DamageEnemy</code> and <code>kf_UseItem</code> (<code>80018054</code>, the Verdite: counter += 100) <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>. Measured from counter 99: one sword hit → STR 20 → 21, counter 0; one Fire Ball hit → MAG 20 → 21 <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<p>One branch is still open: in the decompiled code, a hit with slash but no strike and no thrust would count toward neither stat. No weapon has that profile; whether a spell does is unmeasured <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<h3 id="class">Class</h3>
+<p>The status screens (<code>FUN_800264d8</code>, <code>FUN_80025f38</code>): <code>index = MAG tier + 3 × STR tier</code> (tiers at 40 and 60, from base stats), drawn as four glyph cells at <code>0x100 + 4 × index</code> of the <code>COM/MIX.TIM</code> sheet. Captured on screen for (STR, MAG) 20/20, 39/39, 40/20, 59/20, 20/40, 20/59, 60/20, 20/60, 40/40, 60/60, both sides of each band edge <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>. WIZARD is drawn in red, SWORDMAN in yellow-green, SWORDMASTER in blue, the rest in white.</p>
+<h3 id="totals-and-healing-spells">Totals and healing spells</h3>
+<ul><li>Total attack = <code>(((slash + strike + thrust) · 3 &gt;&gt; 1) + (holy + fire) · 2) · 10 &gt;&gt; 3</code>; the Short Sword gives 7, as on screen. Total defence = <code>(slash + strike + thrust + poison/5 + dark + fire) · 10 / 7</code>, with slash already doubled <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</li><li>Menu-cast healing (<code>FUN_8002317c</code>): Healing HP += MAG; Dispoison clears poison, paralysis and the Resist Fire buff; Resist Fire sets its buff; Bless clears curse, dark and the buff and adds 3 × MAG HP. HP is capped at the maximum <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</li><li>Spell learning flags at <code>8009ce60 + 0x14 × spell</code>, set when MAG passes 36 (with Healing known), 69 and 74 <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</li></ul>
+</section>
+<p class="sources">Research notes behind this article (in the project's repository): <code>decomp/psx_lab/kf1/docs/systems/combat.md</code>, <code>decomp/psx_lab/kf1/docs/data/tables.md</code>.</p>
+</main>
+<footer>Built 2026-10-23 23:55 with drafts.</footer>
+</body>
+</html>
