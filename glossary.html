@@ -21,12 +21,16 @@
 <p>A program that imitates a games console on a modern computer, so the original game runs unchanged. Research emulators can also be paused, inspected and controlled by scripts.</p>
 <h2 id="exp">EXP</h2>
 <p><em>King&#x27;s Field.</em> Experience points, earned by defeating monsters. Enough of them raise your level.</p>
+<h2 id="frame">Frame</h2>
+<p>One picture on screen. In most console games it is also one step of the game&#x27;s clock: everything moves and gets checked once per frame. See also <a class="term" href="glossary.html#update">update</a>.</p>
 <h2 id="function">Function</h2>
 <p>A named piece of a program that does one job, such as &quot;work out the damage of a hit&quot;. A game is made of thousands of them.</p>
 <h2 id="ghidra">Ghidra</h2>
 <p>A free tool for reading machine code, made by the US National Security Agency and widely used for this kind of research. It includes a <a class="term" href="glossary.html#decompile">decompiler</a>.</p>
 <h2 id="integer-division">Integer division</h2>
 <p>Division that drops everything after the decimal point: 7 ÷ 2 is 3, not 3.5. Old consoles calculate this way because it is fast, and it explains many small oddities in game numbers.</p>
+<h2 id="havok">Havok</h2>
+<p>A physics engine that many games of the 2000s licensed instead of writing their own. It moves characters and objects and works out what touches what. In Demon&#x27;s Souls it is bought-in code inside the game&#x27;s program, with no source available to us.</p>
 <h2 id="kanji">Kanji</h2>
 <p>The Chinese-derived characters of written Japanese, one per word or idea. Ordinary text uses a few thousand of them, alongside the two syllable alphabets, hiragana and katakana (together called kana).</p>
 <h2 id="mag">MAG</h2>
@@ -35,8 +39,14 @@
 <p>An accurate open-source emulator of several consoles, including the PlayStation. We use a modified copy that our scripts can control.</p>
 <h2 id="memory-address">Memory address</h2>
 <p>A number naming one spot in the console&#x27;s working memory (RAM). The PlayStation has 2 MB of it, and a running game keeps everything there, such as the player&#x27;s health at one address and their strength at another.</p>
+<h2 id="plugin">Plugin</h2>
+<p>A small piece of our own code that a program loads while it runs. For the recompiled Demon&#x27;s Souls, plugins let us read, change or replace parts of the running game without rebuilding the game itself.</p>
+<h2 id="random-number">Random number</h2>
+<p>A number a game draws to make a choice look like chance. Old consoles compute them with a fixed formula from the previous one (the seed), so the same seed always gives the same sequence. That is why research can predict them exactly.</p>
 <h2 id="speedrun">Speedrun</h2>
 <p>Playing a game from start to finish as fast as possible, usually timed and compared on public leaderboards. Speedrunners often find a game&#x27;s hidden rules long before anyone reads its code.</p>
+<h2 id="static-recompilation">Static recompilation</h2>
+<p>Translating a program&#x27;s machine code for one processor into source code for another, ahead of time, and compiling that. The result runs natively, without an <a class="term" href="glossary.html#emulator">emulator</a>, but the translated code has no names and is very hard to read.</p>
 <h2 id="str">STR</h2>
 <p><em>King&#x27;s Field.</em> The player&#x27;s strength. It raises the damage of weapon hits, how fast the <a class="term" href="glossary.html#swing-gauge">swing gauge</a> refills, and your defence against every kind of attack.</p>
 <h2 id="strafe">Strafe</h2>
@@ -50,6 +60,6 @@
 <h2 id="video-memory">Video memory</h2>
 <p>A console&#x27;s separate memory for pictures: what is on screen, plus every texture and font waiting to be drawn. The PlayStation has 1 MB of it.</p>
 </main>
-<footer>Built 2026-10-24 00:25 with drafts.</footer>
+<footer>Built 2026-11-04 14:09 with drafts.</footer>
 </body>
 </html>
