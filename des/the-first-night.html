@@ -25,6 +25,12 @@
 <h3 id="watching-from-outside">Watching from outside</h3>
 <p>To check anything, we had to watch the real game run. The tools built that night were each reasonable on their own:</p>
 <ul><li>a watch that reports when the game reads a chosen memory field;</li><li>a way to run the game without a window and feed it controller input from a file;</li><li>a patch to skip the boot logos;</li><li>a live channel for reading, writing and freezing memory while the game runs.</li></ul>
+<aside class="explain">
+<h4 id="watching-a-game-s-memory">Watching a game&#x27;s memory</h4>
+<p>Everything a game knows at a given moment sits in its memory as numbers: the player&#x27;s health, the boss&#x27;s position, which attack it is in the middle of. Each value lives at a fixed spot, an <em>address</em>.</p>
+<p>To learn what a value means, you watch it. Which part of the program reads the boss&#x27;s health? What changes when it starts an attack? A &quot;watch&quot; asks the running game to report every time a chosen address is read or written. &quot;Freezing&quot; a value pins it, so you can see what the game does when, say, health never drops.</p>
+<p>It works, but it is indirect. You learn about the program by watching what it leaves behind in memory, like studying an animal from its footprints.</p>
+</aside>
 <h3 id="why-it-was-slow">Why it was slow</h3>
 <p>Each run spent about <strong>45 seconds</strong> booting and loading a save before it could answer one small question.</p>
 <p>The tutorial has no save points of its own, so getting anywhere near the boss took minutes.</p>
@@ -41,6 +47,12 @@
 <p>to me it is absurd that this is proceeding slower than full black box decomp work we&#x27;ve done using emulators.</p>
 </blockquote>
 <p>They were right. We had a C program we compile ourselves, and we were treating it like a sealed console, one memory field at a time.</p>
+<aside class="explain">
+<h4 id="outside-and-inside">Outside and inside</h4>
+<p>With an <a class="term" href="../glossary.html#emulator">emulator</a>, the game is a sealed box. You can look at its memory and press its buttons, but the program itself is the original machine code, which you can only observe.</p>
+<p>A recompiled port is different. The program is source code on our own disk. We can add a line that prints something whenever a function runs. We can stop it at any point with ordinary programming tools. We can even swap out one function for our own.</p>
+<p>Working from the outside of a program you hold the source of is like reading a book through the window of the shop that sells it.</p>
+</aside>
 <h3 id="working-from-inside">Working from inside</h3>
 <p>Things changed within the hour.</p>
 <p>First, <strong>a real debugger.</strong> The build got a symbol file, so an ordinary Windows debugger could stop inside any game function by name.</p>
@@ -50,6 +62,12 @@
 </blockquote>
 <p>A full game build takes a long time, and from then on each one needed the owner&#x27;s approval. <a class="term" href="../glossary.html#plugin">Plugins</a> needed neither.</p>
 <p>The first plugin unlocked <strong>the game&#x27;s own hidden debug menu</strong>. That menu can start the Vanguard&#x27;s map directly, with no save at all.</p>
+<aside class="explain">
+<h4 id="debuggers-symbols-and-plugins">Debuggers, symbols and plugins</h4>
+<p>A <strong>debugger</strong> is a programmer&#x27;s tool that can pause a running program at a chosen spot and show everything it is holding at that moment. To pause &quot;in the function that picks an attack&quot;, the debugger has to know where that function is. A <strong>symbol file</strong> tells it: a list of every function&#x27;s name and location. Our build could make one, because we compile it ourselves.</p>
+<p>A <strong>plugin</strong> is a small separate program file that the game loads when it starts. It runs inside the game, so it can read and change anything the game can. Rebuilding the whole game took a long time. A plugin takes seconds to build, and the game itself stays untouched.</p>
+<p>A <strong>debug menu</strong> is a tool the original developers left inside the game for their own testing: jump to any map, change settings, skip ahead. Players never see it, but it is often still in the finished program.</p>
+</aside>
 <h3 id="the-question-nobody-asked">The question nobody asked</h3>
 <p>The next hour taught a lesson about who knows what.</p>
 <p>We spent it trying to work out how saving works, and how close you must get before the Vanguard wakes up. The owner knew both answers from playing:</p>
@@ -58,8 +76,14 @@
 <p>why don&#x27;t you just ask me? we just went on a multi hour quest for info I can get you in 2 seconds flat</p>
 </blockquote>
 <p>That has been a standing rule since. Facts about how the game <em>behaves</em> come from the player first. Only the mechanisms behind them are traced in the code.</p>
+<aside class="explain">
+<h4 id="what-versus-how">What versus how</h4>
+<p>Finding out <em>what</em> a game does and <em>how</em> it does it are different jobs.</p>
+<p>&quot;Does the boss wait for you to come close?&quot; is a <em>what</em> question. Anyone who has played the game knows the answer. &quot;Which numbers in memory decide when the fight starts?&quot; is a <em>how</em> question, and only the code can answer it.</p>
+<p>Tracing code to answer a <em>what</em> question is like reverse-engineering a lift to find out which floor the café is on, when you could ask the receptionist.</p>
+</aside>
 <h3 id="a-simulation-nobody-could-use">A simulation nobody could use</h3>
-<p>The simulation got built anyway, with every unchecked value named as a stand-in for later tuning. Its attack choices matched the real odds from the code within about half a percentage point.</p>
+<p>The simulation got built anyway, with every unchecked value named as a <em>stand-in</em> for later tuning: a guess, marked as a guess, kept in one place so it can be corrected when the real value is known. Its attack choices matched the real odds from the code within about half a percentage point.</p>
 <p>Then, at 05:01:</p>
 <blockquote>
 <p>if its headless what use is it to me?</p>
@@ -74,6 +98,11 @@
 <blockquote>
 <p>try warping around the map, test well make sure the problem we imagine is actually there, or isn&#x27;t. then we&#x27;ll call the shots</p>
 </blockquote>
+<aside class="explain">
+<h4 id="why-teleporting-can-break-a-game">Why teleporting can break a game</h4>
+<p>Big 3D games don&#x27;t hold the whole world in memory at once. They load the area around the player and keep loading more as the player moves, a technique called <em>streaming</em>. Walking, you never notice: the next room is ready before you arrive.</p>
+<p>Teleport the player far away, and they may land somewhere that hasn&#x27;t been loaded yet: no floor, no walls, nothing to stand on. The fear was that this would make teleporting useless for reaching the boss.</p>
+</aside>
 <h3 id="four-minutes">Four minutes</h3>
 <p>The test took four minutes.</p>
 <p>Starting from the debug menu instead of a save, four long jumps across the Vanguard&#x27;s map all landed cleanly. The last one went straight into the arena: the boss&#x27;s health bar on screen, the player already knocked down.</p>
@@ -85,6 +114,11 @@
 <p><em>where do we start</em>. what gives you <em>leverage</em></p>
 </blockquote>
 <p>Within ten minutes the goal was written into the project&#x27;s instructions: <strong>reproduce the game piece by piece, without the PlayStation&#x27;s concepts.</strong> The task at hand was to find out how hard that would be.</p>
+<aside class="explain">
+<h4 id="running-the-original-versus-rebuilding-it">Running the original versus rebuilding it</h4>
+<p>The recompiled port still runs the original program, translated. Everything PlayStation-shaped is still in there: the memory layout, the helper cores&#x27; little programs, the way the graphics chip is driven. The port pretends to be a PS3 for the game&#x27;s sake.</p>
+<p>Rebuilding means writing our own code that does what the game does, system by system, until no translated PS3 code is left. Each piece we write can be run next to the original and compared, number for number. That is the long road, and the one this workspace prefers.</p>
+</aside>
 <h3 id="first-measurements">First measurements</h3>
 <p>Two quick measurements followed:</p>
 <ul><li>a static pass looking for clean boundaries between the program&#x27;s parts;</li><li>a CPU sample of the Vanguard fight, to see where the time goes.</li></ul>
@@ -101,6 +135,6 @@
 <div class="table"><table><thead><tr><th>Case</th><th>Distance</th><th>Simulation</th><th>Code</th></tr></thead><tbody><tr><td>Player standing</td><td>10.2 m or more</td><td>4.5 / 52.7 / 28.0 / 14.9</td><td>5 / 52.25 / 28.5 / 14.25</td></tr><tr><td>Player standing</td><td>3.0–10.2 m</td><td>5.0 / 32.9 / 38.3 / 23.8</td><td>5 / 33.25 / 38 / 23.75</td></tr><tr><td>Player close</td><td>under 1.5 m</td><td>20.4 / 23.8 / 3.8 / 4.0 / 48.0</td><td>20 / 24 / 4 / 4 / 48</td></tr></tbody></table></div>
 </section>
 </main>
-<footer>Built 2026-11-04 14:18 with drafts.</footer>
+<footer>Built 2026-11-04 14:39 with drafts.</footer>
 </body>
 </html>

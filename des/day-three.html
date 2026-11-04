@@ -25,21 +25,49 @@
 <h3 id="one-routine-at-a-time">One routine at a time</h3>
 <p>Through the night, one Havok routine after another was written out by hand and checked against the game, each with an exact score:</p>
 <ul><li><strong>the ground check</strong>, which finds the floor under the character;</li><li><strong>the walk through Havok&#x27;s compressed collision tree</strong>: 22,500 of 22,500 steps identical;</li><li><strong>the constraint solver</strong>, which settles all of a frame&#x27;s contacts at once;</li><li><strong>the closest point</strong> between the character&#x27;s capsule and a triangle of the level.</li></ul>
+<aside class="explain">
+<h4 id="collision-trees-and-solvers">Collision trees and solvers</h4>
+<p>A game level is made of many thousands of small triangles. Testing the character against every one of them each frame would be far too slow.</p>
+<p>So the triangles are sorted in advance into a <strong>tree</strong>: the whole level is cut into smaller regions, each region into smaller ones again, and so on, down to single triangles. To find what the character might touch, the engine starts at the top and only follows the regions the character overlaps. A few dozen steps instead of thousands of tests. Havok also packs this tree tightly to save memory, which makes it harder to read.</p>
+<p>A character often touches several things at once: the floor, a wall, the corner of a step. Pushing it out of each one separately can push it into another. A <strong>constraint solver</strong> looks at all the contacts together and finds one movement that satisfies all of them as well as it can.</p>
+</aside>
 <h3 id="01-10">01:10</h3>
 <p>Then came the milestone. On the recorded walks, a full movement step, with <strong>all</strong> collision computed by our own code, came out bit for bit equal to the game <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<aside class="explain">
+<h4 id="what-bit-for-bit-means">What &quot;bit for bit&quot; means</h4>
+<p>Computers store numbers like positions in a fixed number of binary digits, <em>bits</em>. Most fractions can&#x27;t be stored exactly, so every calculation rounds a little.</p>
+<p>That rounding depends on the exact order of the steps. Work out <code>a + b + c</code> as <code>(a + b) + c</code> or as <code>a + (b + c)</code>, and the last bit of the answer can differ. A tiny difference, but over hundreds of frames tiny differences grow.</p>
+<p>So &quot;close&quot; is not enough proof that we understand the code. &quot;Bit for bit&quot; means every bit of every number equals the game&#x27;s: the same steps, in the same order, with the same rounding. Getting there is strong evidence that we rebuilt the routine the way it really is.</p>
+</aside>
 <h3 id="walking-turning-and-the-loop">Walking, turning, and the loop</h3>
 <p>The code that chooses the walking animation (walk, run, dash, and when to switch) was rebuilt next.</p>
 <p>By morning it ran in a closed loop with the physics step. The animation drives the movement, and the movement feeds the next choice of animation.</p>
 <p>The 180-degree turn was reproduced too.</p>
+<aside class="explain">
+<h4 id="open-loop-and-closed-loop">Open loop and closed loop</h4>
+<p>There are two ways to test a piece of a simulation.</p>
+<p>In an <strong>open loop</strong>, each frame starts from the real game&#x27;s numbers. We feed our code the game&#x27;s state, compare its answer for the next frame, then throw that answer away and start the next frame from the game&#x27;s numbers again. A mistake can&#x27;t grow, so it is easy to find.</p>
+<p>In a <strong>closed loop</strong>, our code runs on its own answers. Each frame starts where our previous frame ended. That is the real test: if anything is slightly wrong, the error carries forward and grows. A closed loop that stays on track for a whole recording means the parts really fit together.</p>
+</aside>
 <h3 id="no-peeking-ahead">No peeking ahead</h3>
 <p>The owner set one more rule that night.</p>
 <p>A simulation may take events from a recording, but only on the frame they really happened, and labelled as such:</p>
 <blockquote>
 <p>That makes the difference between a causal simulation with known external events and a replay that has advance knowledge.</p>
 </blockquote>
+<aside class="explain">
+<h4 id="simulation-versus-replay">Simulation versus replay</h4>
+<p>Imagine a weather model that is allowed to read tomorrow&#x27;s newspaper. Its forecasts would be perfect, and worthless.</p>
+<p>A simulation can cheat the same way. If our code can look at what the recording says happens <em>next</em>, it can match the game without understanding anything. The rule keeps it honest: an outside event, such as the player pressing a button, may enter the simulation only on the frame it happened, never earlier.</p>
+</aside>
 <h3 id="back-to-the-vanguard-from-below">Back to the Vanguard, from below</h3>
 <p>By the morning of the third day, the work had returned to the boss, this time from the bottom up:</p>
 <ul><li>The player&#x27;s hit reactions to the Vanguard&#x27;s blows went through our walking and physics model, and stayed within a few millionths of a metre of the game.</li><li>The Vanguard&#x27;s attack shapes were placed through its skeleton, the way the game does it.</li><li>Its body was the first character to collide with the player in our model.</li><li>The checker for which attacks may hit matched all 2,301 recorded decisions.</li></ul>
+<aside class="explain">
+<h4 id="skeletons-and-hit-shapes">Skeletons and hit shapes</h4>
+<p>Characters in 3D games are animated with a <strong>skeleton</strong>: an invisible set of bones, each attached to the one before it, like shoulder, elbow, wrist. The animation moves the bones, and the visible body follows them.</p>
+<p>A blow doesn&#x27;t hit because the picture of the club touches the player. Each attack carries invisible <strong>hit shapes</strong>, usually spheres or capsules, fixed to bones. On each frame of the swing, the game moves them with the bone and tests them against the player&#x27;s body. To place them right, we have to move the skeleton the way the game does.</p>
+</aside>
 <h3 id="footsteps">Footsteps</h3>
 <p>A sound session joined in. It decoded all <strong>139 sound banks</strong> (3,295 clips) and predicted which footstep sound plays from the floor material in our collision map.</p>
 <p>Footsteps driven by our own simulated movement matched all <strong>31</strong> in the recording <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
@@ -51,6 +79,12 @@
 <p>We are optimizing for a trustworthy independent Vanguard simulation, not generalizing every game subsystem.</p>
 </blockquote>
 <p>The boss simulation that was dropped at 05:16 on day two is the goal again.</p>
+<aside class="explain">
+<h4 id="evidence-and-coverage">Evidence and coverage</h4>
+<p>A check can be strong and still narrow.</p>
+<p>Matching 2,301 of 2,301 decisions is strong: not one disagreement. But all of them come from one walk through one fight. They show that our code agrees with the game <em>in the situations that recording happened to contain</em>. A situation the recording never met, such as a different weapon or a different floor, hasn&#x27;t been tested at all.</p>
+<p>That is why the next step is a new recording rather than more checks on the old one. More checks on the same data add little. New situations show where the model breaks.</p>
+</aside>
 
 </section>
 <section class="details">
@@ -65,6 +99,6 @@
 <p>The reference is the recompiled port, not a real PlayStation 3. Anything that might be a quirk of the port stays marked until it is checked against an emulator or the console.</p>
 </section>
 </main>
-<footer>Built 2026-11-04 14:18 with drafts.</footer>
+<footer>Built 2026-11-04 14:39 with drafts.</footer>
 </body>
 </html>

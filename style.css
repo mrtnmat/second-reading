@@ -44,5 +44,11 @@ ol.parts{padding-left:0;list-style:none}
 ol.parts li{margin:1rem 0}
 ol.parts .n{color:var(--muted);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:.85rem;margin-right:.4rem}
 ol.parts p{margin:.15rem 0 0;color:var(--muted)}
+aside.explain{background:var(--card);border-left:3px solid var(--link);border-radius:0 8px 8px 0;
+padding:.2rem 1.1rem .5rem;margin:1.6rem 0;font-size:.97rem}
+aside.explain::before{content:"In plain words";display:block;margin-top:.7rem;color:var(--muted);
+font:600 .72rem system-ui,-apple-system,"Segoe UI",sans-serif;text-transform:uppercase;letter-spacing:.06em}
+aside.explain h4{font:600 1rem system-ui,-apple-system,"Segoe UI",sans-serif;margin:.2rem 0 .3rem}
+aside.explain p{margin:.5rem 0}
 .spoilers{border-left:3px solid var(--draft);padding:.2rem .8rem;font-size:.95rem}
 footer{color:var(--muted);font:.8rem system-ui,-apple-system,"Segoe UI",sans-serif;padding-bottom:2rem}

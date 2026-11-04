@@ -30,6 +30,18 @@
 <p>A recompiled port is the game&#x27;s own program, translated function by function from PlayStation 3 machine code into C, then compiled for a PC. This is called <a class="term" href="../glossary.html#static-recompilation">static recompilation</a>.</p>
 <p>No <a class="term" href="../glossary.html#emulator">emulator</a> runs underneath. The game simply <em>is</em> a PC program now.</p>
 <p>For us, that meant the game was suddenly a C program we could build ourselves. All of its roughly 94,000 functions were there as C source. They are machine-made, nameless and very hard to read, but they are there.</p>
+<aside class="explain">
+<h4 id="why-is-a-playstation-3-game-so-hard-to-take-apart">Why is a PlayStation 3 game so hard to take apart?</h4>
+<p>A game program is a long list of tiny instructions for one specific processor: &quot;add these two numbers&quot;, &quot;fetch this value from memory&quot;, &quot;jump over there&quot;. Nobody writes those by hand. Programmers write readable source code, and a compiler turns it into instructions. The source code stays at the studio.</p>
+<p>The PlayStation 3 makes things harder than most consoles. Its processor, the Cell, has one main core plus six smaller helper cores available to games, that run their own little programs side by side. On top of that sit a separate graphics chip and Sony&#x27;s own system libraries. A PS3 game is written for all of that at once.</p>
+</aside>
+<aside class="explain">
+<h4 id="decompiling-and-recompiling">Decompiling and recompiling</h4>
+<p>Both start from the same instructions, but they aim at different things.</p>
+<p><strong>Decompiling</strong> turns the instructions back into source code that a person can read and understand. It is slow, careful work, done one piece of the program at a time.</p>
+<p><strong>Recompiling</strong> translates the instructions mechanically into source code for a <em>different</em> machine, so the game can run there. Nobody has to understand it. The result works, but it reads like a phone book: thousands of functions called <code>func_002FB840</code> and so on.</p>
+<p>The community had done the recompiling. Our job is closer to the decompiling: working out what those nameless functions <em>mean</em>.</p>
+</aside>
 <h3 id="i-got-killed-by-vanguard">&quot;I got killed by Vanguard&quot;</h3>
 <p>We built timboat&#x27;s port. At 18:42 the owner reported back:</p>
 <blockquote>
@@ -43,6 +55,12 @@
 <ul><li>Enemy AI and map events ship on the disc as 272 readable Lua scripts, comments in Japanese included.</li><li>The program hands about 1,100 of its functions to those scripts <em>by name</em>, so part of its code comes with real names.</li></ul>
 <p><strong>The bad news:</strong> the size.</p>
 <ul><li>By our estimate, the game&#x27;s own code is 25,000–30,000 functions, 50 to 100 times a PlayStation 1 game.</li><li>On top of that sit the bought-in physics engine <a class="term" href="../glossary.html#havok">Havok</a> and Sony&#x27;s system libraries.</li></ul>
+<aside class="explain">
+<h4 id="what-is-a-script-and-why-does-it-help">What is a script, and why does it help?</h4>
+<p>Many games are built in two layers. The heavy machinery (drawing, physics, sound) is compiled into the program. The decisions (&quot;if the player is close, swing the club&quot;) are written in a small, simple language that the program reads from files while it runs. Those files are scripts.</p>
+<p>Scripts are a gift to researchers. They ship on the disc as plain text, often with the developers&#x27; own comments left in. And whenever a script asks the program to do something, it has to ask for it by name: <code>GetDist</code>, <code>SetSuperArmor</code>, <code>RevivePlayer</code>. Each of those names labels a piece of the otherwise nameless program.</p>
+<p>Demon&#x27;s Souls uses the language Lua for its scripts.</p>
+</aside>
 <h3 id="one-boss-nothing-else">One boss, nothing else</h3>
 <p>At 18:54 the owner set the direction:</p>
 <blockquote>
@@ -54,6 +72,12 @@
 <p>DEBU DEMON, omg too good</p>
 <p>we don&#x27;t even need the stage, just debu demon on a flat world and a character that does nothing but move</p>
 </blockquote>
+<aside class="explain">
+<h4 id="what-is-a-headless-simulation">What is a headless simulation?</h4>
+<p>A game does two jobs at once. It <em>simulates</em>: it works out where everyone is, who hits whom, how much health is left. And it <em>presents</em>: it draws the picture and plays the sound.</p>
+<p>A headless simulation keeps only the first job. There is no picture, just numbers going in (the player&#x27;s controller input) and numbers coming out (positions, attacks, damage). That makes it fast, so it can run thousands of fights in a minute, and easy to check, because every number can be compared with the real game&#x27;s.</p>
+<p>We had built one before, for an arcade shooter. The plan was to do the same for a single boss fight.</p>
+</aside>
 <h3 id="three-fast-hours">Three fast hours</h3>
 <p>The next three hours went fast, because almost all of it was reading:</p>
 <ul><li>The Vanguard&#x27;s brain is <strong>one 6 KB Lua script</strong>. Each time it acts, it picks one of five attacks by weighted chance.</li><li>Its attacks&#x27; timings and hit shapes came out of the animation files.</li><li>The native routines under the script were <a class="term" href="../glossary.html#decompile">decompiled</a>, all the way down to the virtual control stick the AI &quot;pushes&quot; to walk.</li></ul>
@@ -62,6 +86,12 @@
 <p>The script gives each attack a weight. But the close attack is tested against one random roll, and the other four against a second, separate roll. So the real odds differ from the weights <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
 <p>Up close, the sweep attack comes up 32 % of the time, although the script gives it a weight of 20. The full table is below.</p>
 <p>A port would keep the real odds, since that is how the game has always played.</p>
+<aside class="explain">
+<h4 id="weights-rolls-and-why-two-rolls-change-the-odds">Weights, rolls, and why two rolls change the odds</h4>
+<p>A &quot;weighted&quot; choice works like a raffle. Give the sweep 20 tickets, the close hit 60, the others 10 each: 100 tickets in all. Draw one ticket, and the sweep wins 20 times in 100. One draw decides everything.</p>
+<p>The Vanguard&#x27;s script draws <strong>twice</strong>. The first draw only asks &quot;close hit, yes or no?&quot;. If the answer is no, a second, fresh draw picks among the rest, but it still counts the close hit&#x27;s tickets, and those happen to fall to the sweep.</p>
+<p>It looks like a slip, and one draw was probably meant <span class="badge reading" title="Our interpretation of why: reasoned, not proven">our reading</span>. The two-draw version quietly favours the sweep up close. Nobody playing could have measured that exactly; the code shows it directly.</p>
+</aside>
 
 </section>
 <section class="details">
@@ -75,6 +105,6 @@
 <p>Far away, the real odds stay within about 2 points of the weights. Up close, the gap is large.</p>
 </section>
 </main>
-<footer>Built 2026-11-04 14:18 with drafts.</footer>
+<footer>Built 2026-11-04 14:39 with drafts.</footer>
 </body>
 </html>

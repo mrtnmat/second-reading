@@ -34,14 +34,30 @@
 </blockquote>
 <p>Havok is bought-in code. FromSoftware didn&#x27;t write it, and we have no source for it. It is also where much of a 3D game&#x27;s &quot;chaos&quot; lives: many objects, contacts and corrections, every frame.</p>
 <p>The method was to start with whatever is easiest to test in the running game, and branch out from there.</p>
+<aside class="explain">
+<h4 id="what-does-a-physics-engine-do">What does a physics engine do?</h4>
+<p>Every frame, a 3D game has to answer questions like these. The player pushed the stick forward: where do they end up? Is there a wall in the way? Are they still standing on the floor, or falling? Did the boss&#x27;s club touch the player&#x27;s body?</p>
+<p>A physics engine answers them. It knows the shape of every wall, floor and character, moves things, and sorts out what touches what. It is hard to write well, so many studios buy one instead. Havok was the best-known engine of the time, used in hundreds of games.</p>
+<p>Bought-in code is a black box twice over: the game&#x27;s developers didn&#x27;t write it either, and they only used it through its front door.</p>
+</aside>
 <h3 id="a-map-of-the-engine-by-breakfast">A map of the engine, by breakfast</h3>
 <p>The program carries type information that Havok uses for itself. Read the right way, it gave us:</p>
 <ul><li>the memory layouts of <strong>366 Havok classes</strong>;</li><li>names or tags for <strong>5,955 of Havok&#x27;s functions</strong>.</li></ul>
 <p>With that map, we found the routine that moves a character.</p>
+<aside class="explain">
+<h4 id="classes-layouts-and-type-information">Classes, layouts and type information</h4>
+<p>Programs like this one are organised into <em>classes</em>: blueprints for kinds of things. A &quot;character proxy&quot; class, for example, describes what the engine keeps for each moving character: position, velocity, shape, and so on. The <em>layout</em> says where each of those values sits inside the block of memory.</p>
+<p>Some engines carry a description of their own classes inside the program, so they can save and load their objects. Havok does. Reading that description gave us the names and layouts directly, instead of guessing them value by value from memory.</p>
+</aside>
 <h3 id="the-first-experiment-walk-into-a-wall">The first experiment: walk into a wall</h3>
 <p>The first experiment was the simplest one possible: walk into a wall and record what happens.</p>
 <p>The engine removed the part of the velocity that points into the wall, exactly as the textbook says it should.</p>
 <p>Underneath it, the game does something of its own. Every frame it lifts the character 30 cm, lets Havok move it, then snaps it back down to the floor with its own check.</p>
+<aside class="explain">
+<h4 id="capsules-and-velocities">Capsules and velocities</h4>
+<p>To the physics engine, a character isn&#x27;t a detailed body. It is a <strong>capsule</strong>: a cylinder with rounded ends, roughly the size of the character. Capsules slide smoothly along walls and over small bumps, and testing them against the world is cheap.</p>
+<p>A <strong>velocity</strong> is a speed with a direction: &quot;1.5 metres per second, forward and a little to the left&quot;. Each frame, the game asks the engine to move the capsule by its velocity. When the capsule meets a wall, the engine removes the part of the velocity that points into the wall and keeps the part that slides along it. That&#x27;s why you glide along walls in most 3D games instead of sticking to them.</p>
+</aside>
 <h3 id="a-second-map">A second map</h3>
 <p>A second session started mapping FromSoftware&#x27;s own engine, Dantelion. It had found 4,910 classes by the end of the morning.</p>
 <p>The owner summed up how the earlier work had felt:</p>
@@ -58,6 +74,11 @@
 <p>The owner started playing with a logging plugin running. They dropped off ledges and stairs on purpose, so the recordings held real falls.</p>
 <p>The falls held a surprise: the player fell at half the expected rate.</p>
 <ul><li>The first suspect was the port&#x27;s 60 frames per second. Research moved to the game&#x27;s original 30, and has stayed there since.</li><li>Eight minutes later that was corrected. The falls were just as slow at 30.</li><li>The cause was in the game&#x27;s own code. It builds each frame&#x27;s fall from the velocity of <strong>two frames earlier</strong>.</li></ul>
+<aside class="explain">
+<h4 id="frames-and-why-the-frame-rate-matters">Frames, and why the frame rate matters</h4>
+<p>A game doesn&#x27;t move things continuously. It moves them in small steps, once per <em>frame</em>, and draws a new picture after each step. Demon&#x27;s Souls was made to run at 30 frames per second. The PC port can run it at 60.</p>
+<p>Doubling the frame rate means each step must be half as big, so every rule in the code that says &quot;per frame&quot; has to be adjusted. If one of them is missed, things move at the wrong speed. That is why slow falls first looked like a side effect of 60 frames per second.</p>
+</aside>
 <h3 id="things-no-player-sees">Things no player sees</h3>
 <p>The logs showed things that no player ever sees.</p>
 <ul><li>Every play begins with the character falling 1.2 metres, before the picture is up. The owner spotted it in the log.</li><li>An extra character sat on an otherwise unused collision layer. The owner guessed first: a scripted version of the ghosts that show other players&#x27; play. The game&#x27;s class name agreed: <code>ReplayGhostIns</code>.</li></ul>
@@ -71,6 +92,12 @@
 <p>if there is a complex but relatively isolable system, we can stub one and be sure we know we are stubbing a fake implementation in. what we want to avoid are hard to track divergences</p>
 </blockquote>
 <p>A fake part is fine, as long as everyone knows it is fake. What isn&#x27;t fine is a difference from the game that nobody can find.</p>
+<aside class="explain">
+<h4 id="stubs-and-divergences">Stubs and divergences</h4>
+<p>A <strong>stub</strong> is a stand-in: a piece of code that fakes something we haven&#x27;t rebuilt yet. &quot;The camera always faces north&quot; is a stub. As long as it is labelled, it is harmless. Everyone knows that part is fake, and nobody trusts results that depend on it.</p>
+<p>A <strong>divergence</strong> is a place where our version and the game&#x27;s start to disagree. A small one can grow quietly over hundreds of frames until the boss is in the wrong place, and by then it is very hard to tell where it started.</p>
+<p>So the rule is: fake things openly, and catch every disagreement at the first frame and the first number where it appears.</p>
+</aside>
 <h3 id="one-step-of-movement">One step of movement</h3>
 <p>The next assignment followed directly from that. Reproduce <strong>one movement step</strong> of the player in our own code, in three levels:</p>
 <ol><li>Take Havok&#x27;s own contacts as given, and compute only the response.</li><li>Compute the contacts ourselves, from our own map of the collision world.</li><li>Compute the whole step.</li></ol>
@@ -88,6 +115,6 @@
 <div class="table"><table><thead><tr><th>When (3 Nov)</th><th>What happened</th></tr></thead><tbody><tr><td>06:20</td><td>Havok teardown plan; 366 class layouts</td></tr><tr><td>06:28</td><td>Havok&#x27;s 5,955 functions named or tagged</td></tr><tr><td>06:41–06:51</td><td>The character movement routine found; the wall experiment</td></tr><tr><td>06:59</td><td>Lift 30 cm, move, snap to the floor</td></tr><tr><td>07:09</td><td>Dantelion map, part 1: 4,910 classes</td></tr><tr><td>14:31</td><td>The running jump doesn&#x27;t exist</td></tr><tr><td>14:48–15:08</td><td>Falls at half rate; research moves to 30 fps; the cause is a two-frame-old velocity</td></tr><tr><td>15:22</td><td>Contact response model: 213 of 214 frames</td></tr><tr><td>16:32</td><td>Collision-world map: map geometry, placements, materials</td></tr><tr><td>16:59</td><td>&quot;How hard it is to be sure how right we are&quot;</td></tr><tr><td>17:18</td><td>Assignment: one independent movement step</td></tr><tr><td>17:47</td><td>Level 1 checked</td></tr><tr><td>18:39</td><td>Level 2: a full step on our own contacts</td></tr><tr><td>19:07</td><td>The extra character is <code>ReplayGhostIns</code></td></tr></tbody></table></div>
 </section>
 </main>
-<footer>Built 2026-11-04 14:18 with drafts.</footer>
+<footer>Built 2026-11-04 14:39 with drafts.</footer>
 </body>
 </html>
