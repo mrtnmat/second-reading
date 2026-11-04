@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The first night: manipulate it, or cancel · Second Reading</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="site"><a class="name" href="../index.html">Second Reading</a>
+<a href="../glossary.html">Glossary</a><a href="../updates.html">Recently updated</a></header>
+<main>
+<h1>The first night: manipulate it, or cancel</h1>
+<p class="meta"><a href="index.html">Demon&#x27;s Souls, the journal</a>, part 2 · revised 2026-11-04 · <span class="draft">draft</span></p>
+
+<section class="short">
+<h2 id="in-short">In short</h2>
+<p>Reading the game is one thing. Checking that you read it right means watching the real game run, and that is where the work slowed to a crawl.</p>
+<p>We were treating the recompiled game like a sealed console, watching it from outside. The owner called that out at 02:53: <em>&quot;I think the approach is wrong.&quot;</em></p>
+<p>Two hours later came the low point: <em>&quot;we find a way to manipulate the game, or we cancel the whole project.&quot;</em> A four-minute test found the way. Then the owner dropped the boss simulation and set a much bigger goal.</p>
+
+</section>
+<section>
+<h2 id="how-it-went">How it went</h2>
+<h3 id="watching-from-outside">Watching from outside</h3>
+<p>To check anything, we had to watch the real game run. The tools built that night were each reasonable on their own:</p>
+<ul><li>a watch that reports when the game reads a chosen memory field;</li><li>a way to run the game without a window and feed it controller input from a file;</li><li>a patch to skip the boot logos;</li><li>a live channel for reading, writing and freezing memory while the game runs.</li></ul>
+<h3 id="why-it-was-slow">Why it was slow</h3>
+<p>Each run spent about <strong>45 seconds</strong> booting and loading a save before it could answer one small question.</p>
+<p>The tutorial has no save points of its own, so getting anywhere near the boss took minutes.</p>
+<p>The first enemy we picked to study never attacked at all, however much it was provoked. The owner checked that in their own play: it was simply that kind of enemy.</p>
+<p>Hardware trouble that night forced every run and build to be throttled as well.</p>
+<h3 id="i-think-the-approach-is-wrong">&quot;I think the approach is wrong&quot;</h3>
+<p>At 02:48 the owner asked how this was expected to go. The honest answer was &quot;weeks&quot;.</p>
+<p>Five minutes later:</p>
+<blockquote>
+<p>I think the approach is wrong</p>
+</blockquote>
+<p>And then the point that set the course for everything after:</p>
+<blockquote>
+<p>to me it is absurd that this is proceeding slower than full black box decomp work we&#x27;ve done using emulators.</p>
+</blockquote>
+<p>They were right. We had a C program we compile ourselves, and we were treating it like a sealed console, one memory field at a time.</p>
+<h3 id="working-from-inside">Working from inside</h3>
+<p>Things changed within the hour.</p>
+<p>First, <strong>a real debugger.</strong> The build got a symbol file, so an ordinary Windows debugger could stop inside any game function by name.</p>
+<p>Then the owner suggested the step that mattered most:</p>
+<blockquote>
+<p>we need to load a custom dll with the game, so we have a hook to load our code without recompiling every time</p>
+</blockquote>
+<p>A full game build takes a long time, and from then on each one needed the owner&#x27;s approval. <a class="term" href="../glossary.html#plugin">Plugins</a> needed neither.</p>
+<p>The first plugin unlocked <strong>the game&#x27;s own hidden debug menu</strong>. That menu can start the Vanguard&#x27;s map directly, with no save at all.</p>
+<h3 id="the-question-nobody-asked">The question nobody asked</h3>
+<p>The next hour taught a lesson about who knows what.</p>
+<p>We spent it trying to work out how saving works, and how close you must get before the Vanguard wakes up. The owner knew both answers from playing:</p>
+<ul><li>a save always puts you back at the start of the area;</li><li>bosses have no wake-up range: the fight starts when you walk through the fog gate.</li></ul>
+<blockquote>
+<p>why don&#x27;t you just ask me? we just went on a multi hour quest for info I can get you in 2 seconds flat</p>
+</blockquote>
+<p>That has been a standing rule since. Facts about how the game <em>behaves</em> come from the player first. Only the mechanisms behind them are traced in the code.</p>
+<h3 id="a-simulation-nobody-could-use">A simulation nobody could use</h3>
+<p>The simulation got built anyway, with every unchecked value named as a stand-in for later tuning. Its attack choices matched the real odds from the code within about half a percentage point.</p>
+<p>Then, at 05:01:</p>
+<blockquote>
+<p>if its headless what use is it to me?</p>
+</blockquote>
+<h3 id="five-in-the-morning">Five in the morning</h3>
+<p>At 05:06:</p>
+<blockquote>
+<p>two options: we find a way to manipulate the game, or we cancel the whole project</p>
+</blockquote>
+<p>The obvious way to manipulate it was teleporting the player, and that had failed earlier. Long jumps had left the player stuck in fog, and the guess was that that part of the map hadn&#x27;t loaded yet.</p>
+<p>The owner didn&#x27;t accept the guess:</p>
+<blockquote>
+<p>try warping around the map, test well make sure the problem we imagine is actually there, or isn&#x27;t. then we&#x27;ll call the shots</p>
+</blockquote>
+<h3 id="four-minutes">Four minutes</h3>
+<p>The test took four minutes.</p>
+<p>Starting from the debug menu instead of a save, four long jumps across the Vanguard&#x27;s map all landed cleanly. The last one went straight into the arena: the boss&#x27;s health bar on screen, the player already knocked down.</p>
+<p>The fight could now be reached in about a minute, on demand. The imagined problem wasn&#x27;t there.</p>
+<h3 id="the-new-goal">The new goal</h3>
+<p>At 05:16 the owner changed the target. They didn&#x27;t care about the simulation; they had only picked it because it seemed easy.</p>
+<blockquote>
+<p>we need to leverage this cheat engine to make progress into understanding this game. we eventually want to be able to reproduce all its functionalities one by one instead of running the original code through a translation layer of sort.</p>
+<p><em>where do we start</em>. what gives you <em>leverage</em></p>
+</blockquote>
+<p>Within ten minutes the goal was written into the project&#x27;s instructions: <strong>reproduce the game piece by piece, without the PlayStation&#x27;s concepts.</strong> The task at hand was to find out how hard that would be.</p>
+<h3 id="first-measurements">First measurements</h3>
+<p>Two quick measurements followed:</p>
+<ul><li>a static pass looking for clean boundaries between the program&#x27;s parts;</li><li>a CPU sample of the Vanguard fight, to see where the time goes.</li></ul>
+<p>Neither gave a simple answer, and a later pass corrected the first sample&#x27;s labels. The next article picks up from there.</p>
+
+</section>
+<section class="details">
+<p class="shift">From here on it gets technical: formulas, memory addresses and how each claim was checked.</p>
+<h2 id="the-details">The details</h2>
+<h3 id="timeline">Timeline</h3>
+<div class="table"><table><thead><tr><th>When</th><th>What happened</th></tr></thead><tbody><tr><td>2 Nov 22:47</td><td>First runtime tool inside the port: a read watch</td></tr><tr><td>2 Nov 23:21</td><td>Runs without a window, controller input from a file</td></tr><tr><td>3 Nov 00:04</td><td>The first tutorial soldier never attacks</td></tr><tr><td>3 Nov 00:11</td><td>Boot logos skipped (title screen at 13 s)</td></tr><tr><td>3 Nov 01:34</td><td>Live memory channel: read, write, freeze</td></tr><tr><td>3 Nov 02:24–02:27</td><td>Runs and builds throttled</td></tr><tr><td>3 Nov 02:53</td><td>&quot;I think the approach is wrong&quot;</td></tr><tr><td>3 Nov 02:59</td><td>The port runs under a debugger with symbols</td></tr><tr><td>3 Nov 03:59</td><td>Plugin DLLs; the game&#x27;s debug menu</td></tr><tr><td>3 Nov 04:07</td><td>The debug menu starts the Vanguard map without a save</td></tr><tr><td>3 Nov 04:37–04:44</td><td>Saves and wake-up range: answered by the owner from play</td></tr><tr><td>3 Nov 04:51</td><td>Headless Vanguard simulation built</td></tr><tr><td>3 Nov 05:06</td><td>&quot;Manipulate the game, or cancel the whole project&quot;</td></tr><tr><td>3 Nov 05:13</td><td>Long teleports work; fight reachable in about a minute</td></tr><tr><td>3 Nov 05:25</td><td>New goal written down</td></tr><tr><td>3 Nov 05:31–05:45</td><td>Separability pass and CPU sample</td></tr></tbody></table></div>
+<h3 id="the-simulation-s-attack-odds-against-the-code">The simulation&#x27;s attack odds against the code</h3>
+<p>Share of each attack in the simulation&#x27;s runs, against the real odds from the code (in brackets). Close hit / sweep / combo / charged, plus jump in the last row:</p>
+<div class="table"><table><thead><tr><th>Case</th><th>Distance</th><th>Simulation</th><th>Code</th></tr></thead><tbody><tr><td>Player standing</td><td>10.2 m or more</td><td>4.5 / 52.7 / 28.0 / 14.9</td><td>5 / 52.25 / 28.5 / 14.25</td></tr><tr><td>Player standing</td><td>3.0–10.2 m</td><td>5.0 / 32.9 / 38.3 / 23.8</td><td>5 / 33.25 / 38 / 23.75</td></tr><tr><td>Player close</td><td>under 1.5 m</td><td>20.4 / 23.8 / 3.8 / 4.0 / 48.0</td><td>20 / 24 / 4 / 4 / 48</td></tr></tbody></table></div>
+</section>
+</main>
+<footer>Built 2026-11-04 14:18 with drafts.</footer>
+</body>
+</html>

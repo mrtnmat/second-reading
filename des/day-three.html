@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day three: bit for bit, and back to the boss · Second Reading</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="site"><a class="name" href="../index.html">Second Reading</a>
+<a href="../glossary.html">Glossary</a><a href="../updates.html">Recently updated</a></header>
+<main>
+<h1>Day three: bit for bit, and back to the boss</h1>
+<p class="meta"><a href="index.html">Demon&#x27;s Souls, the journal</a>, part 4 · revised 2026-11-04 · <span class="draft">draft</span></p>
+
+<section class="short">
+<h2 id="in-short">In short</h2>
+<p>At 01:10 on 4 November, a full movement step of the player was computed entirely by our own code, with all collision included. On every recording we had, it matched the game bit for bit <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<p>By the next afternoon the work had returned to the boss that was dropped at five in the morning the day before. This time it was built from parts we can measure.</p>
+<p>Asked how healthy the project was, the session working on the attacks gave an honest answer: strong evidence, narrow coverage.</p>
+
+</section>
+<section>
+<h2 id="how-it-went">How it went</h2>
+<h3 id="one-routine-at-a-time">One routine at a time</h3>
+<p>Through the night, one Havok routine after another was written out by hand and checked against the game, each with an exact score:</p>
+<ul><li><strong>the ground check</strong>, which finds the floor under the character;</li><li><strong>the walk through Havok&#x27;s compressed collision tree</strong>: 22,500 of 22,500 steps identical;</li><li><strong>the constraint solver</strong>, which settles all of a frame&#x27;s contacts at once;</li><li><strong>the closest point</strong> between the character&#x27;s capsule and a triangle of the level.</li></ul>
+<h3 id="01-10">01:10</h3>
+<p>Then came the milestone. On the recorded walks, a full movement step, with <strong>all</strong> collision computed by our own code, came out bit for bit equal to the game <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<h3 id="walking-turning-and-the-loop">Walking, turning, and the loop</h3>
+<p>The code that chooses the walking animation (walk, run, dash, and when to switch) was rebuilt next.</p>
+<p>By morning it ran in a closed loop with the physics step. The animation drives the movement, and the movement feeds the next choice of animation.</p>
+<p>The 180-degree turn was reproduced too.</p>
+<h3 id="no-peeking-ahead">No peeking ahead</h3>
+<p>The owner set one more rule that night.</p>
+<p>A simulation may take events from a recording, but only on the frame they really happened, and labelled as such:</p>
+<blockquote>
+<p>That makes the difference between a causal simulation with known external events and a replay that has advance knowledge.</p>
+</blockquote>
+<h3 id="back-to-the-vanguard-from-below">Back to the Vanguard, from below</h3>
+<p>By the morning of the third day, the work had returned to the boss, this time from the bottom up:</p>
+<ul><li>The player&#x27;s hit reactions to the Vanguard&#x27;s blows went through our walking and physics model, and stayed within a few millionths of a metre of the game.</li><li>The Vanguard&#x27;s attack shapes were placed through its skeleton, the way the game does it.</li><li>Its body was the first character to collide with the player in our model.</li><li>The checker for which attacks may hit matched all 2,301 recorded decisions.</li></ul>
+<h3 id="footsteps">Footsteps</h3>
+<p>A sound session joined in. It decoded all <strong>139 sound banks</strong> (3,295 clips) and predicted which footstep sound plays from the floor material in our collision map.</p>
+<p>Footsteps driven by our own simulated movement matched all <strong>31</strong> in the recording <span class="badge measured" title="Predicted from the code, then checked in the running game">measured</span>.</p>
+<h3 id="how-healthy-is-it">How healthy is it?</h3>
+<p>At the end of the window, the owner asked the session working on the attack logic how healthy the project was. Its answer was candid:</p>
+<ul><li><strong>The evidence is good.</strong> Every claim carries an address and a status.</li><li><strong>The coverage is narrow.</strong> The 2,301 matches come from one recording, one enemy and one map. That is strong evidence for that recording, and weak evidence for the system.</li><li><strong>Waiting costs time.</strong> Only one copy of the game can run at a time, and three sessions take turns.</li></ul>
+<p>The suggested next step was a different recording, not more checks on the same one. The owner agreed, and restated the goal:</p>
+<blockquote>
+<p>We are optimizing for a trustworthy independent Vanguard simulation, not generalizing every game subsystem.</p>
+</blockquote>
+<p>The boss simulation that was dropped at 05:16 on day two is the goal again.</p>
+
+</section>
+<section class="details">
+<p class="shift">From here on it gets technical: formulas, memory addresses and how each claim was checked.</p>
+<h2 id="the-details">The details</h2>
+<h3 id="timeline">Timeline</h3>
+<div class="table"><table><thead><tr><th>When</th><th>What happened</th></tr></thead><tbody><tr><td>3 Nov 19:50</td><td>Our capsule cast matches the game on all 104 candidates</td></tr><tr><td>3 Nov 20:52</td><td>Constraint solver rebuilt independently</td></tr><tr><td>3 Nov 22:38</td><td>Ground cast in 32-bit floats, bit-exact on the game&#x27;s chosen triangle</td></tr><tr><td>4 Nov 00:26</td><td>Collision tree walk: 22,500 of 22,500 steps identical</td></tr><tr><td>4 Nov 01:10</td><td>Movement step with all collision independent, bit-exact on the recordings</td></tr><tr><td>4 Nov 01:27</td><td>The 180-degree turn reproduced</td></tr><tr><td>4 Nov 01:37–02:30</td><td>Walking animation and physics in a closed loop, forward in time only</td></tr><tr><td>4 Nov 02:57</td><td>Sound banks: 139 banks, 3,295 clips decoded</td></tr><tr><td>4 Nov 03:46–03:52</td><td>Hit reactions within 3 × 10⁻⁷ m (walking model) and 8 × 10⁻⁶ m (physics chain)</td></tr><tr><td>4 Nov 12:19–12:27</td><td>Attack shapes placed; first character contact</td></tr><tr><td>4 Nov 13:14</td><td>Attack eligibility: 2,301 of 2,301 decisions</td></tr><tr><td>4 Nov 13:33</td><td>Footsteps from our own movement: 31 of 31</td></tr><tr><td>4 Nov 13:55</td><td>Health check</td></tr></tbody></table></div>
+<h3 id="what-bit-exact-covers-here">What &quot;bit-exact&quot; covers here</h3>
+<p>The movement results are exact on the recordings they were checked against: walks, wall slides, turns and falls on the Vanguard&#x27;s map.</p>
+<p>Some inputs are still taken from the game, and labelled as such:</p>
+<ul><li>the camera&#x27;s heading;</li><li>the order in which Havok&#x27;s first, rough pass lists nearby objects.</li></ul>
+<p>The reference is the recompiled port, not a real PlayStation 3. Anything that might be a quirk of the port stays marked until it is checked against an emulator or the console.</p>
+</section>
+</main>
+<footer>Built 2026-11-04 14:18 with drafts.</footer>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day one: a running game and a plan · Second Reading</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="site"><a class="name" href="../index.html">Second Reading</a>
+<a href="../glossary.html">Glossary</a><a href="../updates.html">Recently updated</a></header>
+<main>
+<h1>Day one: a running game and a plan</h1>
+<p class="meta"><a href="index.html">Demon&#x27;s Souls, the journal</a>, part 1 · revised 2026-11-04 · <span class="draft">draft</span></p>
+
+<section class="short">
+<h2 id="in-short">In short</h2>
+<p>We started on Demon&#x27;s Souls with no goal beyond &quot;an investigation&quot;.</p>
+<p>Within ninety minutes the game was running natively on a PC, thanks to work the community had already done. By the end of the evening we had picked a target: just the first boss, the Vanguard, rebuilt as a small simulation.</p>
+<p>Reading the game&#x27;s data and code went fast. That speed is part of why the next night came as such a shock.</p>
+
+</section>
+<section>
+<h2 id="how-it-went">How it went</h2>
+<h3 id="leverage-what-s-already-there">&quot;Leverage what&#x27;s already there&quot;</h3>
+<p>The owner (the person who runs this workspace) opened the project at 17:11 with a list of community resources and one rule: lean on them.</p>
+<p>That list changed everything. It held:</p>
+<ul><li><strong>two recompilation projects</strong> for Demon&#x27;s Souls, by JonathanDC64 and by timboat, both built on the general PS3 recompiler ps3recomp;</li><li><strong>the modding tools</strong> Paramdex, Soulstruct, SoulsFormatsNEXT and DSMapStudio, which already read most of the game&#x27;s files.</li></ul>
+<h3 id="what-a-recompiled-port-is">What a recompiled port is</h3>
+<p>A recompiled port is the game&#x27;s own program, translated function by function from PlayStation 3 machine code into C, then compiled for a PC. This is called <a class="term" href="../glossary.html#static-recompilation">static recompilation</a>.</p>
+<p>No <a class="term" href="../glossary.html#emulator">emulator</a> runs underneath. The game simply <em>is</em> a PC program now.</p>
+<p>For us, that meant the game was suddenly a C program we could build ourselves. All of its roughly 94,000 functions were there as C source. They are machine-made, nameless and very hard to read, but they are there.</p>
+<h3 id="i-got-killed-by-vanguard">&quot;I got killed by Vanguard&quot;</h3>
+<p>We built timboat&#x27;s port. At 18:42 the owner reported back:</p>
+<blockquote>
+<p>I got killed by Vanguard :(</p>
+</blockquote>
+<p>That is what is supposed to happen; most players lose that fight. It also meant the build worked: the owner had played through the whole tutorial.</p>
+<p>They noted real glitches too. A backstab was cancelled halfway, and the level visibly loaded piece by piece. The notes record both as unexplained.</p>
+<h3 id="a-first-look-inside">A first look inside</h3>
+<p>A quick survey of the program followed, and it brought good news and bad news.</p>
+<p><strong>The good news:</strong> much of the game&#x27;s behaviour isn&#x27;t in the program at all.</p>
+<ul><li>Enemy AI and map events ship on the disc as 272 readable Lua scripts, comments in Japanese included.</li><li>The program hands about 1,100 of its functions to those scripts <em>by name</em>, so part of its code comes with real names.</li></ul>
+<p><strong>The bad news:</strong> the size.</p>
+<ul><li>By our estimate, the game&#x27;s own code is 25,000–30,000 functions, 50 to 100 times a PlayStation 1 game.</li><li>On top of that sit the bought-in physics engine <a class="term" href="../glossary.html#havok">Havok</a> and Sony&#x27;s system libraries.</li></ul>
+<h3 id="one-boss-nothing-else">One boss, nothing else</h3>
+<p>At 18:54 the owner set the direction:</p>
+<blockquote>
+<p>I would just not consider most of the game until we are happy with one interesting situation, like a single boss fight.</p>
+</blockquote>
+<p>The Vanguard was the obvious pick. It is one enemy in a small arena, with no phases, right at the start of the game.</p>
+<p>The game&#x27;s own files call it デブデーモン, &quot;Fat Demon&quot;. The owner&#x27;s reaction, a few minutes later:</p>
+<blockquote>
+<p>DEBU DEMON, omg too good</p>
+<p>we don&#x27;t even need the stage, just debu demon on a flat world and a character that does nothing but move</p>
+</blockquote>
+<h3 id="three-fast-hours">Three fast hours</h3>
+<p>The next three hours went fast, because almost all of it was reading:</p>
+<ul><li>The Vanguard&#x27;s brain is <strong>one 6 KB Lua script</strong>. Each time it acts, it picks one of five attacks by weighted chance.</li><li>Its attacks&#x27; timings and hit shapes came out of the animation files.</li><li>The native routines under the script were <a class="term" href="../glossary.html#decompile">decompiled</a>, all the way down to the virtual control stick the AI &quot;pushes&quot; to walk.</li></ul>
+<h3 id="the-odds-aren-t-what-the-script-says">The odds aren&#x27;t what the script says</h3>
+<p>One small find from that evening is our favourite.</p>
+<p>The script gives each attack a weight. But the close attack is tested against one random roll, and the other four against a second, separate roll. So the real odds differ from the weights <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>.</p>
+<p>Up close, the sweep attack comes up 32 % of the time, although the script gives it a weight of 20. The full table is below.</p>
+<p>A port would keep the real odds, since that is how the game has always played.</p>
+
+</section>
+<section class="details">
+<p class="shift">From here on it gets technical: formulas, memory addresses and how each claim was checked.</p>
+<h2 id="the-details">The details</h2>
+<h3 id="timeline">Timeline</h3>
+<div class="table"><table><thead><tr><th>When (2 Nov)</th><th>What happened</th></tr></thead><tbody><tr><td>17:11</td><td>Project opened; community resource list collected</td></tr><tr><td>18:42</td><td>Recompiled build running; owner reaches the Vanguard</td></tr><tr><td>18:53</td><td>Survey: Lua 5.0.2 scripts, about 1,100 named script functions, Havok 5.5.0; game code estimated at 25–30k functions</td></tr><tr><td>18:55</td><td>Goal: a headless simulation of the Vanguard fight</td></tr><tr><td>19:00–19:14</td><td>Move timings, damage rows and per-frame hit volumes from the disc</td></tr><tr><td>19:50–20:03</td><td>The AI&#x27;s native goals and scheduler decompiled; the odds quirk</td></tr><tr><td>20:14–22:16</td><td>Walking down to the virtual stick, turning, root motion and the move lock</td></tr></tbody></table></div>
+<h3 id="the-vanguard-s-attack-odds">The Vanguard&#x27;s attack odds</h3>
+<p>Real chance, with the script&#x27;s weight in brackets, by distance to the player&#x27;s body surface in metres <span class="badge code" title="Follows from reading the program; not yet checked in the running game">in the code</span>:</p>
+<div class="table"><table><thead><tr><th>Distance</th><th>Close hit</th><th>Sweep</th><th>Combo</th><th>Charged</th><th>Jump</th></tr></thead><tbody><tr><td>10.2 or more</td><td>5 % (5)</td><td>52.25 % (50)</td><td>28.5 % (30)</td><td>14.25 % (15)</td><td>0 (0)</td></tr><tr><td>3.0–10.2</td><td>5 % (5)</td><td>33.25 % (30)</td><td>38 % (40)</td><td>23.75 % (25)</td><td>0 (0)</td></tr><tr><td>1.5–3.0</td><td>60 % (60)</td><td>32 % (20)</td><td>4 % (10)</td><td>4 % (10)</td><td>0 (0)</td></tr><tr><td>under 1.5</td><td>20 % (20)</td><td>24 % (10)</td><td>4 % (5)</td><td>4 % (5)</td><td>48 % (60)</td></tr></tbody></table></div>
+<p>Far away, the real odds stay within about 2 points of the weights. Up close, the gap is large.</p>
+</section>
+</main>
+<footer>Built 2026-11-04 14:18 with drafts.</footer>
+</body>
+</html>

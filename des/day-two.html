@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day two: tearing down the physics engine · Second Reading</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="site"><a class="name" href="../index.html">Second Reading</a>
+<a href="../glossary.html">Glossary</a><a href="../updates.html">Recently updated</a></header>
+<main>
+<h1>Day two: tearing down the physics engine</h1>
+<p class="meta"><a href="index.html">Demon&#x27;s Souls, the journal</a>, part 3 · revised 2026-11-04 · <span class="draft">draft</span></p>
+
+<section class="short">
+<h2 id="in-short">In short</h2>
+<p>The owner narrowed the new goal to one system, chosen <em>because</em> it was hard: <a class="term" href="../glossary.html#havok">Havok</a>, the physics engine.</p>
+<p>The method was simple: pick what is easy to test in the game, take it apart, then branch out from there.</p>
+<p>By the end of the day, our model of how Havok pushes a character off walls matched 213 of 214 recorded frames. The owner had also stated the principle that the rest of the work runs on: knowing <em>how sure</em> we are matters as much as being right.</p>
+
+</section>
+<section>
+<h2 id="how-it-went">How it went</h2>
+<h3 id="why-the-physics-engine">Why the physics engine</h3>
+<p>Early in the morning the owner asked a pointed question:</p>
+<blockquote>
+<p>what can we know about havok itself. how does it work <em>internally</em></p>
+</blockquote>
+<p>And then:</p>
+<blockquote>
+<p>I can be fine with a VERY VERY VERY long process, as long as the intermediate steps are meaningful and interesting</p>
+<p>I don&#x27;t really care about easy results, I want to build a powerful machine to tear down this physic engine down piece by piece</p>
+</blockquote>
+<p>Havok is bought-in code. FromSoftware didn&#x27;t write it, and we have no source for it. It is also where much of a 3D game&#x27;s &quot;chaos&quot; lives: many objects, contacts and corrections, every frame.</p>
+<p>The method was to start with whatever is easiest to test in the running game, and branch out from there.</p>
+<h3 id="a-map-of-the-engine-by-breakfast">A map of the engine, by breakfast</h3>
+<p>The program carries type information that Havok uses for itself. Read the right way, it gave us:</p>
+<ul><li>the memory layouts of <strong>366 Havok classes</strong>;</li><li>names or tags for <strong>5,955 of Havok&#x27;s functions</strong>.</li></ul>
+<p>With that map, we found the routine that moves a character.</p>
+<h3 id="the-first-experiment-walk-into-a-wall">The first experiment: walk into a wall</h3>
+<p>The first experiment was the simplest one possible: walk into a wall and record what happens.</p>
+<p>The engine removed the part of the velocity that points into the wall, exactly as the textbook says it should.</p>
+<p>Underneath it, the game does something of its own. Every frame it lifts the character 30 cm, lets Havok move it, then snaps it back down to the floor with its own check.</p>
+<h3 id="a-second-map">A second map</h3>
+<p>A second session started mapping FromSoftware&#x27;s own engine, Dantelion. It had found 4,910 classes by the end of the morning.</p>
+<p>The owner summed up how the earlier work had felt:</p>
+<blockquote>
+<p>the idea that you weren&#x27;t sure about the function despite having access to the decomp still blows my mind</p>
+</blockquote>
+<h3 id="the-jump-that-doesn-t-exist">The jump that doesn&#x27;t exist</h3>
+<p>The afternoon brought a mistake that both sides had made.</p>
+<p>We planned to study the running jump. The owner had trouble making it work in their own play, too. Then an outside answer arrived: the 2009 game has no manual jump at all.</p>
+<blockquote>
+<p>its particularly hilarious because we EVIDENTLY BOTH MADE THE SAME MISTAKE. cheers mate</p>
+</blockquote>
+<h3 id="falling-on-purpose">Falling on purpose</h3>
+<p>The owner started playing with a logging plugin running. They dropped off ledges and stairs on purpose, so the recordings held real falls.</p>
+<p>The falls held a surprise: the player fell at half the expected rate.</p>
+<ul><li>The first suspect was the port&#x27;s 60 frames per second. Research moved to the game&#x27;s original 30, and has stayed there since.</li><li>Eight minutes later that was corrected. The falls were just as slow at 30.</li><li>The cause was in the game&#x27;s own code. It builds each frame&#x27;s fall from the velocity of <strong>two frames earlier</strong>.</li></ul>
+<h3 id="things-no-player-sees">Things no player sees</h3>
+<p>The logs showed things that no player ever sees.</p>
+<ul><li>Every play begins with the character falling 1.2 metres, before the picture is up. The owner spotted it in the log.</li><li>An extra character sat on an otherwise unused collision layer. The owner guessed first: a scripted version of the ghosts that show other players&#x27; play. The game&#x27;s class name agreed: <code>ReplayGhostIns</code>.</li></ul>
+<h3 id="213-of-214">213 of 214</h3>
+<p>By 15:22, our model of how Havok resolves the player&#x27;s contacts matched <strong>213 of 214</strong> recorded frames.</p>
+<p>By then several sessions were working at once: on physics, on the Dantelion map, on the collision world and later on sound. They shared one running copy of the game and took turns, and the owner passed written plans and notes between them.</p>
+<h3 id="how-sure-are-we">How sure are we?</h3>
+<p>At 16:59 the owner stated the principle the rest of the work runs on:</p>
+<blockquote>
+<p>its not just how hard it is to get everything right, but how hard it is to be sure how right we are.</p>
+<p>if there is a complex but relatively isolable system, we can stub one and be sure we know we are stubbing a fake implementation in. what we want to avoid are hard to track divergences</p>
+</blockquote>
+<p>A fake part is fine, as long as everyone knows it is fake. What isn&#x27;t fine is a difference from the game that nobody can find.</p>
+<h3 id="one-step-of-movement">One step of movement</h3>
+<p>The next assignment followed directly from that. Reproduce <strong>one movement step</strong> of the player in our own code, in three levels:</p>
+<ol><li>Take Havok&#x27;s own contacts as given, and compute only the response.</li><li>Compute the contacts ourselves, from our own map of the collision world.</li><li>Compute the whole step.</li></ol>
+<p>Every value had to be labelled: ours, supplied from the game, deliberately faked, approximate, or not yet understood. For every mismatch we had to find the <em>earliest</em> wrong number. In the brief&#x27;s own words:</p>
+<blockquote>
+<p>The real success criterion is not that the player moves. It&#x27;s that we can distinguish faithful reproduction from approximation—and know exactly where our understanding ends.</p>
+</blockquote>
+<p>The first level was working by 17:47. The second, a full step on contacts we computed ourselves, by 18:39. The night that followed is the next article.</p>
+
+</section>
+<section class="details">
+<p class="shift">From here on it gets technical: formulas, memory addresses and how each claim was checked.</p>
+<h2 id="the-details">The details</h2>
+<h3 id="timeline">Timeline</h3>
+<div class="table"><table><thead><tr><th>When (3 Nov)</th><th>What happened</th></tr></thead><tbody><tr><td>06:20</td><td>Havok teardown plan; 366 class layouts</td></tr><tr><td>06:28</td><td>Havok&#x27;s 5,955 functions named or tagged</td></tr><tr><td>06:41–06:51</td><td>The character movement routine found; the wall experiment</td></tr><tr><td>06:59</td><td>Lift 30 cm, move, snap to the floor</td></tr><tr><td>07:09</td><td>Dantelion map, part 1: 4,910 classes</td></tr><tr><td>14:31</td><td>The running jump doesn&#x27;t exist</td></tr><tr><td>14:48–15:08</td><td>Falls at half rate; research moves to 30 fps; the cause is a two-frame-old velocity</td></tr><tr><td>15:22</td><td>Contact response model: 213 of 214 frames</td></tr><tr><td>16:32</td><td>Collision-world map: map geometry, placements, materials</td></tr><tr><td>16:59</td><td>&quot;How hard it is to be sure how right we are&quot;</td></tr><tr><td>17:18</td><td>Assignment: one independent movement step</td></tr><tr><td>17:47</td><td>Level 1 checked</td></tr><tr><td>18:39</td><td>Level 2: a full step on our own contacts</td></tr><tr><td>19:07</td><td>The extra character is <code>ReplayGhostIns</code></td></tr></tbody></table></div>
+</section>
+</main>
+<footer>Built 2026-11-04 14:18 with drafts.</footer>
+</body>
+</html>
